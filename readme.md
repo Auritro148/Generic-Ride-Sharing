@@ -1,4 +1,4 @@
-# 🚗 CampusRide
+# Generic-Ride-sharing
 
 > **Temporary Developer Onboarding Guide**
 >
