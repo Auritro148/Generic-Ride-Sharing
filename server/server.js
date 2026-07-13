@@ -1,19 +1,15 @@
 const express = require("express");
-
-const app = express();
+const userRoute = require("./routes/userRoutes");
 const PORT = 5000;
 
-app.get("/", (req, res) => {
-    res.send("Server is running!");
-});
 
-app.get("/api/test", (req, res) => {
-    res.json({
-        success: true,
-        message: "Express server is working!",
-        timestamp: new Date().toISOString()
-    });
-});
+
+const app = express();
+app.use(express.json());
+
+app.use("/core/user",userRoute)
+
+
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
