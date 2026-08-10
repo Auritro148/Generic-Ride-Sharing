@@ -52,9 +52,7 @@ async function validateLogin(req, res) {
         res.status(312).json({
             message: "unsuccess"
         })
-
     }
-
 }
 
 
