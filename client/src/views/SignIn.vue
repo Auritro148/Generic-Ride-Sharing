@@ -83,19 +83,19 @@ const errorMessage = ref('')
 const successMessage = ref('')
 
 const handleSubmit = async () => {
+  // Clear previous messages
   errorMessage.value = ''
   successMessage.value = ''
 
   loading.value = true
 
   try {
+    // Send login request to backend
     const response = await signIn(form)
 
     console.log('Backend response:', response)
 
-    // Store JWT
-    localStorage.setItem('token', response.token)
-
+    // signIn() only reaches here if login was successful
     successMessage.value = 'Sign in successful!'
 
     // Go to home page
@@ -104,6 +104,7 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Sign in error:', error)
 
+    // Stay on signin page
     errorMessage.value =
       error.message || 'Something went wrong.'
 

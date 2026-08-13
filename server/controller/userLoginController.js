@@ -25,7 +25,7 @@ async function validateLogin(req, res) {
         // the promise is resolved
 
         if (user.rowCount == 0) {
-            return res.json({
+            return res.status(401).json({
                 message: "invalid credentials"
             })
         }
@@ -36,7 +36,7 @@ async function validateLogin(req, res) {
 
 
         if (!isMatch) {
-            return res.json({
+            return res.status(401).json({
                 message: "invalid credentials"
             })
         }
