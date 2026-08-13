@@ -21,6 +21,9 @@ export const signIn = async (credentials) => {
       data.message || 'Sign in failed'
     )
   }
+  
+  // Store JWT
+  localStorage.setItem('token', data.token)
 
   return data
 }

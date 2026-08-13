@@ -68,7 +68,10 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { signIn } from '../controllers/authController'
+
+const router = useRouter()
 
 const form = reactive({
   email: '',
@@ -90,7 +93,13 @@ const handleSubmit = async () => {
 
     console.log('Backend response:', response)
 
+    // Store JWT
+    localStorage.setItem('token', response.token)
+
     successMessage.value = 'Sign in successful!'
+
+    // Go to home page
+    router.push('/home')
 
   } catch (error) {
     console.error('Sign in error:', error)
