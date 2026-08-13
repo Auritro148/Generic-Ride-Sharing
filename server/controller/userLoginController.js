@@ -1,6 +1,8 @@
 //imports
 const pool = require("../config/dbConfig");
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 
 
 
@@ -18,7 +20,7 @@ async function validateLogin(req, res) {
 
         const user = await pool.query(query_val);
 
-        
+
 
         // the promise is resolved
 
@@ -31,25 +33,42 @@ async function validateLogin(req, res) {
 
         const isMatch = await bcrypt.compare(password, user.rows[0].hash_key);
 
-  
+
 
         if (!isMatch) {
             return res.json({
                 message: "invalid credentials"
-            }) 
+            })
         }
 
 
 
+        const payload = {
+            id: user.rows[0].email,
+
+            status: true,
+        }
+
+        const token = jwt.sign(payload,
+            process.env.JWT_SECRET_KEY,
+            {
+                expiresIn: "1h",
+                algorithm: "HS256",
+                issuer: "core/user/login",
+            }
+        );
+
+
+
         return res.json({
-            message: "logging in ..."
-        })
+            token}
+        )
 
 
     } catch (err) {
 
         console.log(err)
-        res.status(312).json({
+        res.status(500).json({
             message: "unsuccess"
         })
     }
