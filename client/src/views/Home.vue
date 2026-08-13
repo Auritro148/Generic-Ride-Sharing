@@ -15,6 +15,7 @@
 
       <p><strong>Name:</strong> {{ profile.name }}</p>
       <p><strong>Email:</strong> {{ profile.email }}</p>
+      <p><strong>Age:</strong> {{ profile.age }}</p>
     </div>
 
     <p v-if="error" class="error">

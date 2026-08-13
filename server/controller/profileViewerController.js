@@ -12,7 +12,7 @@ async function profileData(req, res) {
     
 
     const query_val = {
-        text: 'SELECT EMAIL ,AGE FROM TEST WHERE EMAIL = $1',
+        text: 'SELECT EMAIL,NAME ,AGE FROM TEST WHERE EMAIL = $1',
         values: [payload.id]
     }
 
@@ -21,6 +21,7 @@ async function profileData(req, res) {
 
     return res.json({
         email: user.rows[0].email,
+        name: user.rows[0].name,
         age: user.rows[0].age
     })
 
