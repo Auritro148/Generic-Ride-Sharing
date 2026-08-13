@@ -1,7 +1,7 @@
-const API_URL = 'http://localhost:3000'
+const API_URL = 'http://localhost:5000'
 
 export const signIn = async (credentials) => {
-  const response = await fetch(`${API_URL}/api/auth/signin`, {
+  const response = await fetch(`${API_URL}/core/user/login`, {
     method: 'POST',
 
     headers: {
