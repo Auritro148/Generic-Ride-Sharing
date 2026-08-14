@@ -15,6 +15,16 @@ const pool = new Pool({
     database: process.env.DB_NAME,
 });
 
+pool.query("SELECT NOW()")
+    .then(result => {
+        console.log("Connected to Supabase!");
+        console.log("Database time:", result.rows[0].now);
+    })
+    .catch(error => {
+        console.error("Database connection failed:");
+        console.error(error);
+    });
+
 console.log(process.env.DB_USER)
 
 
