@@ -4,6 +4,7 @@ import AuthCard from '../components/AuthCard.vue'
 import SignIn from '../views/SignIn.vue'
 import SignUp from '../views/SignUp.vue'
 import Home from '../views/Home.vue'
+import RideRequest from "../views/RideRequest.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -31,6 +32,12 @@ const router = createRouter({
       path: '/home',
       name: 'user-home',
       component: Home
+    },
+
+    {
+      path: "/ride-request",
+      name: "RideRequest",
+      component: RideRequest
     }
   ]
 })

@@ -13,9 +13,9 @@
     <div v-if="profile">
       <h2>Profile Data</h2>
 
-      <p><strong>Name:</strong> {{ profile.name }}</p>
+      <p><strong>First name:</strong> {{ profile.first_name }}</p>
+      <p><strong>Last name:</strong> {{ profile.last_name }}</p>
       <p><strong>Email:</strong> {{ profile.email }}</p>
-      <p><strong>Age:</strong> {{ profile.age }}</p>
     </div>
 
     <p v-if="error" class="error">
