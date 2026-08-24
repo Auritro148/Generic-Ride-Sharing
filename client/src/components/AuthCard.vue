@@ -165,7 +165,7 @@ const handleSignUp = () => {
   position: relative;
 
   /*image*/
-  background-image: url('D:\ACADEMIC_Level 2 term 1\Generic-Ride-Sharing\client\src\components\hom.jpg');
+  background-image: url('D:\ACADEMIC_Level 2 term 1\Generic-Ride-Sharing\client\src\components\home.jpg');
 
   background-size: cover;
   background-position: center;
