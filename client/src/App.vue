@@ -29,6 +29,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 0px;
 }
 </style>
