@@ -140,6 +140,82 @@ async function saveOTP(email, code) {
 }
 
 // ---------------------------------------------
+// Find OTP
+// ---------------------------------------------
+//
+// Retrieves the OTP record for an email.
+//
+// @param {string} email
+// @returns {Object|null}
+//
+async function findOTP(email) {
+
+    const query = `
+        SELECT *
+        FROM public.otp_checker
+        WHERE email = $1
+    `;
+
+    const result = await pool.query(query, [email]);
+
+    if (result.rows.length === 0) {
+        return null;
+    }
+
+    return result.rows[0];
+}
+
+// ---------------------------------------------
+// Mark OTP as used
+// ---------------------------------------------
+//
+// Marks the OTP as used after successful verification.
+//
+// @param {string} email
+// @returns {void}
+//
+async function markOTPUsed(email) {
+
+    const query = `
+        UPDATE public.otp_checker
+        SET is_used = true
+        WHERE email = $1
+    `;
+
+    await pool.query(query, [email]);
+}
+
+
+// ---------------------------------------------
+// Verify user
+// ---------------------------------------------
+//
+// Marks the user's email as verified.
+//
+// @param {string} email
+// @returns {Object|null}
+//
+async function verifyUser(email) {
+
+    const query = `
+        UPDATE public.users
+        SET
+            is_verified = true,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE email = $1
+        RETURNING *
+    `;
+
+    const result = await pool.query(query, [email]);
+
+    if (result.rows.length === 0) {
+        return null;
+    }
+
+    return result.rows[0];
+}
+
+// ---------------------------------------------
 // Delete pending registration
 // ---------------------------------------------
 //
@@ -188,11 +264,13 @@ async function deletePendingRegistration(email) {
 // ---------------------------------------------
 // Module exports
 // ---------------------------------------------
-
 module.exports = {
     findByEmail,
     createUser,
     saveOTP,
+    findOTP,
+    markOTPUsed,
+    verifyUser,
     deletePendingRegistration
 };
 
