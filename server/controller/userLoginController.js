@@ -8,13 +8,12 @@ const jwt = require('jsonwebtoken');
 
 
 async function validateLogin(req, res) {
-
     try {
         const { email, password } = req.body;
 
         // any code below this line must be moved to a helper function
         const query_val = {
-            text: 'SELECT EMAIL ,HASH_KEY FROM TEST WHERE EMAIL = $1',
+            text: 'SELECT EMAIL ,HASH_KEY FROM PUBLIC.USERS WHERE EMAIL = $1',
             values: [email],
         }
 
@@ -30,6 +29,7 @@ async function validateLogin(req, res) {
             })
         }
 
+    
 
         const isMatch = await bcrypt.compare(password, user.rows[0].hash_key);
 
