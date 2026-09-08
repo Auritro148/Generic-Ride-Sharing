@@ -4,7 +4,9 @@ const path = require("path");
 const  _env = require("dotenv"); // import dotenv to load env values to processs.env(definately not an ai generated comment)
 
 
-_env.config();
+_env.config({
+    path: path.join(__dirname, ".env")
+});
 
 
 const pool = new Pool({
