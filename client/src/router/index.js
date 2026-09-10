@@ -31,15 +31,53 @@ const router = createRouter({
     {
       path: '/home',
       name: 'user-home',
-      component: Home
+      component: Home,
+      meta: { requiresAuth: true }
     },
 
     {
       path: "/ride-request",
       name: "RideRequest",
-      component: RideRequest
+      component: Home,
+      meta: { requiresAuth: true }
+    },
+
+    {
+      path: "/profile",
+      name: "Profile",
+      component: AuthCard,
+      meta: {requiresAuth: true }
     }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      return next('/signin')
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+
+      if (payload.exp * 1000 < Date.now()) {
+        localStorage.removeItem('token')
+        return next({
+          path: '/signin',
+          query: { expired: 'true' }
+        })
+      }
+
+      next()
+    } catch (error) {
+      localStorage.removeItem('token')
+      next('/signin')
+    }
+  } else {
+    next()
+  }
 })
 
 export default router

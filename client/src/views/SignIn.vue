@@ -157,10 +157,11 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter , useRoute} from 'vue-router'
 import { signIn } from '../controllers/authController'
 
 const router = useRouter()
+const route = useRoute()
 
 const form = reactive({
   email: '',
@@ -172,13 +173,17 @@ const errorMessage = ref('')
 const successMessage = ref('')
 const showPassword = ref(false)
 
+if (route.query.expired === 'true') {
+  errorMessage.value = 'Your session has expired. Please sign in again.'
+}
+
 const handleLogin = async () => {
   errorMessage.value = ''
   successMessage.value = ''
   loading.value = true
 
   try {
-    console.log('Form being sent:', form)
+    //console.log('Form being sent:', form)
 
     const response = await signIn(form)
 

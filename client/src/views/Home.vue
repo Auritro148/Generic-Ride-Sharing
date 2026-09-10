@@ -1,10 +1,14 @@
+```vue
 <template>
   <div class="home-page">
-    <!-- NAVBAR -->
+
     <nav class="navbar">
       <div class="logo">
-        <div class="logo-icon">
-          <span></span><span></span><span></span><span></span>
+        <div class="logo-mark">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
         <span class="logo-text">Rooda</span>
       </div>
@@ -19,503 +23,873 @@
 
       <div class="profile-area">
         <button
-          class="profile-btn"
+          class="profile-button"
           type="button"
           @click.stop="profileOpen = !profileOpen"
         >
-          <span class="profile-icon">{{ userInitial }}</span>
-          <span>Hi, {{ userName }}</span>
-          <span class="profile-arrow">▾</span>
+          <span class="profile-avatar">
+            {{ userInitial }}
+          </span>
+
+          <span class="profile-name">
+            {{ userName }}
+          </span>
+
+          <span class="profile-arrow">
+            ▾
+          </span>
         </button>
 
-        <div v-if="profileOpen" class="profile-menu">
-          <button type="button" @click="goToProfile">Profile</button>
-          <button type="button" @click="signOut">Sign out</button>
+        <div
+          v-if="profileOpen"
+          class="profile-menu"
+        >
+          <button
+            type="button"
+            @click="goToProfile"
+          >
+            View profile
+          </button>
+
+          <button
+            type="button"
+            @click="signOut"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </nav>
 
-    <!-- MAIN -->
-    <main class="main-content">
-      <div class="welcome-section">
-        <p class="welcome-small">Welcome back</p>
+
+    <main class="page-content">
+
+      <section class="welcome">
+        <p class="eyebrow">
+          Rooda ride
+        </p>
 
         <h1>
           Where are you going,
           <span>{{ userName }}</span>?
         </h1>
 
-        <p class="welcome-description">
-          Choose your pickup and destination to get an estimated fare.
+        <p>
+          Enter your pickup and destination to get
+          an estimated fare.
         </p>
-      </div>
+      </section>
 
-      <section class="ride-card">
 
-        <!-- LEFT PANEL -->
+      <section class="ride-layout">
+
         <div class="ride-panel">
 
-          <div class="panel-header">
+          <div class="panel-title">
             <div>
               <h2>Plan your ride</h2>
-              <p>Select your pickup and destination</p>
+              <p>
+                Choose your pickup and destination
+              </p>
             </div>
 
-            <div class="location-status">
-              <span :class="{ active: pickupLocation }"></span>
-              <span :class="{ active: dropoffLocation }"></span>
+            <div class="progress">
+              <span
+                :class="{ active: pickupLocation }"
+              ></span>
+
+              <span
+                :class="{ active: dropoffLocation }"
+              ></span>
             </div>
           </div>
 
+
           <!-- PICKUP -->
-          <div class="location-group">
-            <label>Pickup location</label>
 
-            <div class="location-input-row">
-              <div class="input-icon pickup-icon">●</div>
+          <div
+            v-if="step === 'pickup'"
+            class="location-section"
+          >
+            <div class="section-label">
+              <span class="green-dot"></span>
+              Pickup location
+            </div>
 
-              <div class="search-wrapper">
-                <input
-                  v-model="pickupQuery"
-                  type="text"
-                  placeholder="Enter pickup location"
-                  autocomplete="off"
-                  @input="handlePickupInput"
-                  @focus="pickupFocused = true"
-                  @keydown.escape="pickupFocused = false"
-                />
+            <div class="search-box">
 
-                <div
-                  v-if="pickupFocused && pickupSuggestions.length"
-                  class="suggestions"
-                >
-                  <button
-                    v-for="place in pickupSuggestions"
-                    :key="place.id"
-                    type="button"
-                    class="suggestion-item"
-                    @mousedown.prevent="selectPickupSuggestion(place)"
-                  >
-                    <span class="suggestion-icon">⌖</span>
-
-                    <span class="suggestion-text">
-                      <strong>{{ place.name }}</strong>
-                      <small>{{ place.address }}</small>
-                    </span>
-                  </button>
-                </div>
-
-                <div
-                  v-if="pickupFocused && pickupLoading"
-                  class="search-loading"
-                >
-                  Searching...
-                </div>
-              </div>
+              <input
+                v-model="pickupQuery"
+                type="text"
+                autocomplete="off"
+                placeholder="Search pickup location"
+                @input="onPickupInput"
+                @focus="pickupFocused = true"
+                @keydown.escape="pickupFocused = false"
+              />
 
               <button
-                class="search-btn"
+                v-if="pickupQuery"
+                class="clear-button"
                 type="button"
-                :disabled="pickupLoading"
-                @click="searchPickup"
+                @click="clearPickup"
               >
-                {{ pickupLoading ? '...' : 'Search' }}
+                ×
               </button>
             </div>
 
+
+            <div
+              v-if="
+                pickupFocused &&
+                (pickupLoading ||
+                pickupSuggestions.length)
+              "
+              class="suggestions"
+            >
+
+              <div
+                v-if="pickupLoading"
+                class="loading-suggestion"
+              >
+                Searching locations...
+              </div>
+
+              <button
+                v-for="place in pickupSuggestions"
+                :key="place.id"
+                type="button"
+                class="suggestion"
+                @mousedown.prevent="
+                  chooseSearchResult(place, 'pickup')
+                "
+              >
+                <span class="suggestion-icon">
+                  ⌖
+                </span>
+
+                <span class="suggestion-content">
+                  <strong>
+                    {{ place.name }}
+                  </strong>
+
+                  <small>
+                    {{ place.address }}
+                  </small>
+                </span>
+              </button>
+
+            </div>
+
+
             <button
-              class="current-btn"
+              class="current-location"
               type="button"
               :disabled="locationLoading"
               @click="useCurrentLocation('pickup')"
             >
-              ◎
+              <span>◎</span>
+
               {{
-                locationLoading && currentLocationTarget === 'pickup'
+                locationLoading &&
+                currentLocationTarget === 'pickup'
                   ? 'Locating...'
                   : 'Use current location'
               }}
             </button>
-          </div>
 
-          <div class="route-connector">
-            <span></span>
-          </div>
 
-          <!-- DROPOFF -->
-          <div class="location-group">
-            <label>Drop-off location</label>
+            <button
+              class="map-select-button"
+              type="button"
+              @click="startMapSelection('pickup')"
+            >
+              <span>⌖</span>
+              Select pickup on map
+            </button>
 
-            <div class="location-input-row">
-              <div class="input-icon dropoff-icon">●</div>
 
-              <div class="search-wrapper">
-                <input
-                  v-model="dropoffQuery"
-                  type="text"
-                  placeholder="Where do you want to go?"
-                  autocomplete="off"
-                  @input="handleDropoffInput"
-                  @focus="dropoffFocused = true"
-                  @keydown.escape="dropoffFocused = false"
-                />
-
-                <div
-                  v-if="dropoffFocused && dropoffSuggestions.length"
-                  class="suggestions"
-                >
-                  <button
-                    v-for="place in dropoffSuggestions"
-                    :key="place.id"
-                    type="button"
-                    class="suggestion-item"
-                    @mousedown.prevent="selectDropoffSuggestion(place)"
-                  >
-                    <span class="suggestion-icon">⌖</span>
-
-                    <span class="suggestion-text">
-                      <strong>{{ place.name }}</strong>
-                      <small>{{ place.address }}</small>
-                    </span>
-                  </button>
-                </div>
-
-                <div
-                  v-if="dropoffFocused && dropoffLoading"
-                  class="search-loading"
-                >
-                  Searching...
-                </div>
+            <div
+              v-if="pendingLocation"
+              class="selected-preview"
+            >
+              <div class="preview-title">
+                Selected location
               </div>
 
+              <strong>
+                {{ pendingLocation.name }}
+              </strong>
+
+              <small>
+                {{ pendingLocation.address }}
+              </small>
+
+              <div class="preview-actions">
+                <button
+                  type="button"
+                  @click="confirmPendingLocation"
+                >
+                  Confirm pickup
+                </button>
+
+                <button
+                  type="button"
+                  @click="cancelPendingLocation"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- DROPOFF -->
+
+          <div
+            v-if="step === 'dropoff'"
+            class="location-section"
+          >
+
+            <div class="section-label">
+              <span class="red-dot"></span>
+              Where are you going?
+            </div>
+
+            <div class="search-box">
+
+              <input
+                v-model="dropoffQuery"
+                type="text"
+                autocomplete="off"
+                placeholder="Search destination"
+                @input="onDropoffInput"
+                @focus="dropoffFocused = true"
+                @keydown.escape="dropoffFocused = false"
+              />
+
               <button
-                class="search-btn"
+                v-if="dropoffQuery"
+                class="clear-button"
                 type="button"
-                :disabled="dropoffLoading"
-                @click="searchDropoff"
+                @click="clearDropoff"
               >
-                {{ dropoffLoading ? '...' : 'Search' }}
+                ×
               </button>
             </div>
 
+
+            <div
+              v-if="
+                dropoffFocused &&
+                (dropoffLoading ||
+                dropoffSuggestions.length)
+              "
+              class="suggestions"
+            >
+
+              <div
+                v-if="dropoffLoading"
+                class="loading-suggestion"
+              >
+                Searching locations...
+              </div>
+
+              <button
+                v-for="place in dropoffSuggestions"
+                :key="place.id"
+                type="button"
+                class="suggestion"
+                @mousedown.prevent="
+                  chooseSearchResult(place, 'dropoff')
+                "
+              >
+                <span class="suggestion-icon">
+                  ⌖
+                </span>
+
+                <span class="suggestion-content">
+                  <strong>
+                    {{ place.name }}
+                  </strong>
+
+                  <small>
+                    {{ place.address }}
+                  </small>
+                </span>
+              </button>
+
+            </div>
+
+
             <button
-              class="current-btn"
+              class="current-location"
               type="button"
               :disabled="locationLoading"
               @click="useCurrentLocation('dropoff')"
             >
-              ◎
+              <span>◎</span>
+
               {{
-                locationLoading && currentLocationTarget === 'dropoff'
+                locationLoading &&
+                currentLocationTarget === 'dropoff'
                   ? 'Locating...'
                   : 'Use current location'
               }}
             </button>
+
+
+            <button
+              class="map-select-button"
+              type="button"
+              @click="startMapSelection('dropoff')"
+            >
+              <span>⌖</span>
+              Select destination on map
+            </button>
+
+
+            <div
+              v-if="pendingLocation"
+              class="selected-preview"
+            >
+              <div class="preview-title">
+                Selected location
+              </div>
+
+              <strong>
+                {{ pendingLocation.name }}
+              </strong>
+
+              <small>
+                {{ pendingLocation.address }}
+              </small>
+
+              <div class="preview-actions">
+                <button
+                  type="button"
+                  @click="confirmPendingLocation"
+                >
+                  Confirm destination
+                </button>
+
+                <button
+                  type="button"
+                  @click="cancelPendingLocation"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
           </div>
 
-          <!-- MESSAGE -->
-          <div
-            v-if="locationMessage"
-            class="location-message"
-            :class="locationMessageType"
-          >
-            {{ locationMessage }}
-          </div>
 
-          <!-- RIDE DETAILS -->
+          <!-- ROUTE SUMMARY -->
+
           <div
             v-if="pickupLocation && dropoffLocation"
-            class="ride-details"
+            class="route-summary"
           >
 
-            <!-- DISTANCE -->
-            <div class="distance-card">
+            <div class="route-location">
+              <span class="route-dot pickup"></span>
+
               <div>
-                <span class="detail-label">Road distance</span>
-                <strong>{{ distance }} km</strong>
-              </div>
-
-              <div class="distance-meta">
-                <span>{{ duration }} min</span>
-                <span>•</span>
-                <span>Dhaka route</span>
-              </div>
-            </div>
-
-            <!-- VEHICLES -->
-            <div class="vehicle-section">
-              <div class="section-title">
-                <h3>Choose your vehicle</h3>
-
-                <span>
-                  {{
-                    fareLoading
-                      ? 'Calculating...'
-                      : 'Fare by vehicle'
-                  }}
-                </span>
-              </div>
-
-              <div
-                v-if="vehiclesLoading"
-                class="loading-card"
-              >
-                Loading available vehicle types...
-              </div>
-
-              <div
-                v-else-if="vehicles.length === 0"
-                class="loading-card error-card"
-              >
-                No vehicle type is currently available.
-              </div>
-
-              <div
-                v-else
-                class="vehicle-list"
-              >
-                <button
-                  v-for="vehicle in vehicles"
-                  :key="vehicle.id || vehicle.type"
-                  type="button"
-                  class="vehicle-card"
-                  :class="{
-                    selected: selectedVehicle === vehicle.type
-                  }"
-                  @click="selectVehicle(vehicle.type)"
-                >
-                  <div class="vehicle-left">
-                    <div class="vehicle-circle">
-                      {{ vehicle.icon || '🚗' }}
-                    </div>
-
-                    <div class="vehicle-info">
-                      <strong>
-                        {{ vehicle.name || vehicle.type }}
-                      </strong>
-
-                      <span>
-                        {{
-                          vehicle.description ||
-                          'Available vehicle'
-                        }}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="vehicle-price">
-                    {{
-                      fareFor(vehicle.type) === null
-                        ? '—'
-                        : `৳${fareFor(vehicle.type)}`
-                    }}
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <!-- COUPON -->
-            <div class="coupon-section">
-              <h3>Have a coupon?</h3>
-
-              <div class="coupon-row">
-                <input
-                  v-model="couponCode"
-                  type="text"
-                  placeholder="Enter coupon code"
-                  @keyup.enter="applyCoupon"
-                />
-
-                <button
-                  type="button"
-                  @click="applyCoupon"
-                >
-                  Apply
-                </button>
-              </div>
-
-              <p
-                v-if="couponMessage"
-                class="coupon-message"
-                :class="couponMessageType"
-              >
-                {{ couponMessage }}
-              </p>
-            </div>
-
-            <!-- FARE -->
-            <div
-              v-if="selectedFare"
-              class="fare-summary"
-            >
-              <div class="fare-line">
-                <span>Vehicle</span>
-                <span>
-                  {{
-                    selectedVehicleData?.name ||
-                    selectedVehicle
-                  }}
-                </span>
-              </div>
-
-              <div class="fare-line">
-                <span>Distance</span>
-                <span>{{ distance }} km</span>
-              </div>
-
-              <div
-                v-if="selectedFare.baseFare != null"
-                class="fare-line"
-              >
-                <span>Base fare</span>
-                <span>৳{{ selectedFare.baseFare }}</span>
-              </div>
-
-              <div
-                v-if="selectedFare.perKm != null"
-                class="fare-line"
-              >
-                <span>Rate</span>
-                <span>
-                  ৳{{ selectedFare.perKm }}/km
-                </span>
-              </div>
-
-              <div
-                v-if="selectedFare.discount > 0"
-                class="fare-line discount"
-              >
-                <span>Coupon discount</span>
-                <span>
-                  - ৳{{ selectedFare.discount }}
-                </span>
-              </div>
-
-              <div class="fare-total">
-                <div>
-                  <span>Estimated fare</span>
-                  <small>
-                    Calculated by Rooda server
-                  </small>
-                </div>
-
+                <small>Pickup</small>
                 <strong>
-                  ৳{{ selectedFare.fare }}
+                  {{ pickupLocation.name }}
                 </strong>
               </div>
             </div>
 
-            <!-- REQUEST -->
-            <button
-              class="request-btn"
-              type="button"
-              :disabled="requestLoading || !selectedFare"
-              @click="requestRide"
-            >
-              <span>
-                {{
-                  requestLoading
-                    ? 'Requesting...'
-                    : 'Request Ride'
-                }}
-              </span>
+            <div class="route-line"></div>
 
-              <span class="request-arrow">→</span>
+            <div class="route-location">
+              <span class="route-dot dropoff"></span>
+
+              <div>
+                <small>Destination</small>
+                <strong>
+                  {{ dropoffLocation.name }}
+                </strong>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="change-route"
+              @click="changeLocations"
+            >
+              Change
             </button>
+
           </div>
 
-          <!-- HINT -->
+
+          <!-- DISTANCE -->
+
           <div
-            v-else
-            class="ride-hint"
+            v-if="
+              pickupLocation &&
+              dropoffLocation &&
+              distance !== null
+            "
+            class="distance-card"
           >
-            <div class="hint-icon">✦</div>
+            <div>
+              <small>Road distance</small>
+              <strong>
+                {{ distance }} km
+              </strong>
+            </div>
 
             <div>
-              <strong>Choose your route</strong>
-
-              <p>
-                Search a location, use your current
-                location, or click directly on the map.
-              </p>
+              <small>Estimated time</small>
+              <strong>
+                {{ duration }} min
+              </strong>
             </div>
           </div>
+
+
+          <!-- VEHICLES -->
+
+          <div
+            v-if="
+              pickupLocation &&
+              dropoffLocation
+            "
+            class="vehicle-section"
+          >
+
+            <div class="section-heading">
+              <h3>Choose your vehicle</h3>
+
+              <span v-if="fareLoading">
+                Calculating...
+              </span>
+            </div>
+
+
+            <div
+              v-if="vehiclesLoading"
+              class="empty-box"
+            >
+              Loading vehicle types...
+            </div>
+
+
+            <div
+              v-else-if="vehicles.length === 0"
+              class="empty-box error"
+            >
+              No vehicle type available.
+            </div>
+
+
+            <div
+              v-else
+              class="vehicle-list"
+            >
+
+              <button
+                v-for="vehicle in vehicles"
+                :key="vehicle.type"
+                type="button"
+                class="vehicle-card"
+                :class="{
+                  selected:
+                    selectedVehicle === vehicle.type
+                }"
+                @click="
+                  selectedVehicle = vehicle.type
+                "
+              >
+
+                <div class="vehicle-main">
+
+                  <div class="vehicle-icon">
+                    {{ vehicle.icon || '🚗' }}
+                  </div>
+
+                  <div>
+                    <strong>
+                      {{
+                        vehicle.name ||
+                        vehicle.type
+                      }}
+                    </strong>
+
+                    <small>
+                      {{
+                        vehicle.description ||
+                        'Available vehicle'
+                      }}
+                    </small>
+                  </div>
+
+                </div>
+
+
+                <div class="vehicle-fare">
+
+                  <span
+                    v-if="
+                      fareFor(vehicle.type) !== null
+                    "
+                  >
+                    ৳{{ fareFor(vehicle.type) }}
+                  </span>
+
+                  <span v-else>
+                    —
+                  </span>
+
+                </div>
+
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- COUPON -->
+
+          <div
+            v-if="
+              pickupLocation &&
+              dropoffLocation &&
+              selectedVehicle
+            "
+            class="coupon-section"
+          >
+
+            <h3>
+              Have a coupon?
+            </h3>
+
+            <div class="coupon-row">
+
+              <input
+                v-model="couponCode"
+                type="text"
+                placeholder="Enter coupon code"
+                @keyup.enter="applyCoupon"
+              />
+
+              <button
+                type="button"
+                :disabled="fareLoading"
+                @click="applyCoupon"
+              >
+                Apply
+              </button>
+
+            </div>
+
+            <p
+              v-if="couponMessage"
+              :class="couponMessageType"
+            >
+              {{ couponMessage }}
+            </p>
+
+          </div>
+
+
+          <!-- FARE -->
+
+          <div
+            v-if="selectedFare"
+            class="fare-card"
+          >
+
+            <div class="fare-row">
+              <span>Vehicle</span>
+              <strong>
+                {{
+                  selectedVehicleData?.name ||
+                  selectedVehicle
+                }}
+              </strong>
+            </div>
+
+            <div class="fare-row">
+              <span>Distance</span>
+              <strong>
+                {{ distance }} km
+              </strong>
+            </div>
+
+            <div
+              v-if="selectedFare.baseFare !== null"
+              class="fare-row"
+            >
+              <span>Base fare</span>
+              <strong>
+                ৳{{ selectedFare.baseFare }}
+              </strong>
+            </div>
+
+            <div
+              v-if="selectedFare.perKm !== null"
+              class="fare-row"
+            >
+              <span>Rate</span>
+              <strong>
+                ৳{{ selectedFare.perKm }}/km
+              </strong>
+            </div>
+
+            <div
+              v-if="selectedFare.discount > 0"
+              class="fare-row discount"
+            >
+              <span>Coupon discount</span>
+              <strong>
+                - ৳{{ selectedFare.discount }}
+              </strong>
+            </div>
+
+            <div class="fare-total">
+              <div>
+                <small>
+                  Estimated fare
+                </small>
+
+                <span>
+                  Calculated by Rooda server
+                </span>
+              </div>
+
+              <strong>
+                ৳{{ selectedFare.fare }}
+              </strong>
+            </div>
+
+          </div>
+
+
+          <!-- REQUEST -->
+
+          <button
+            v-if="
+              pickupLocation &&
+              dropoffLocation &&
+              selectedFare
+            "
+            class="request-button"
+            type="button"
+            :disabled="requestLoading"
+            @click="requestRide"
+          >
+            {{
+              requestLoading
+                ? 'Requesting ride...'
+                : 'Request Ride'
+            }}
+
+            <span>→</span>
+          </button>
+
+
+          <!-- MESSAGE -->
+
+          <div
+            v-if="message"
+            class="message"
+            :class="messageType"
+          >
+            {{ message }}
+          </div>
+
         </div>
 
+
         <!-- MAP -->
+
         <div class="map-panel">
+
           <div
             ref="mapContainer"
             class="map"
           ></div>
 
+
           <div class="map-top-card">
-            <span class="map-live-dot"></span>
-            <span>Dhaka service area</span>
+            <span></span>
+            Dhaka service area
           </div>
 
+
+          <!-- CENTER PIN -->
+
+          <div
+            v-if="mapSelecting"
+            class="center-pin-container"
+          >
+            <div class="center-pin">
+              <div class="pin-head"></div>
+              <div class="pin-shadow"></div>
+            </div>
+          </div>
+
+
+          <div
+            v-if="mapSelecting"
+            class="map-selection-panel"
+          >
+            <div>
+              <small>
+                Move the map to choose a location
+              </small>
+
+              <strong>
+                {{
+                  mapCenterLocation?.name ||
+                  'Finding location...'
+                }}
+              </strong>
+            </div>
+
+            <button
+              type="button"
+              @click="confirmMapCenter"
+            >
+              Use this location
+            </button>
+          </div>
+
+
           <button
-            class="map-location-btn"
+            v-if="!mapSelecting"
+            class="locate-map-button"
             type="button"
             @click="
               useCurrentLocation(
-                pickupLocation
-                  ? 'dropoff'
-                  : 'pickup'
+                step === 'pickup'
+                  ? 'pickup'
+                  : 'dropoff'
               )
             "
           >
             ◎
           </button>
 
-          <div class="map-instruction">
-            <span class="map-click-icon">⌖</span>
-            <span>
-              Click the map to select a location
-            </span>
-          </div>
-
-          <div
-            v-if="mapSelectionText"
-            class="map-selection"
-          >
-            {{ mapSelectionText }}
-          </div>
         </div>
+
       </section>
+
     </main>
+
   </div>
 </template>
 
+
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount
+} from 'vue'
+
+import {
+  useRouter
+} from 'vue-router'
+
 import mapboxgl from 'mapbox-gl'
+
 import 'mapbox-gl/dist/mapbox-gl.css'
+
 
 const router = useRouter()
 
+
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000'
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:5000'
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_ACCESS_TOKEN
+
 
 /* =========================================================
    USER
 ========================================================= */
 
-const userName = ref(
-  localStorage.getItem('user_name') ||
-  localStorage.getItem('name') ||
-  'User'
-)
+const userName = ref('User')
 
 const userInitial = computed(() =>
   userName.value.charAt(0).toUpperCase()
 )
 
+const loadUserProfile = async () => {
+  const token = localStorage.getItem('token')
+
+  if (!token) {
+    router.push('/signin')
+    return
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/core/user/profile`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || 'Failed to load profile'
+      )
+    }
+
+    const firstName =
+      data.first_name?.trim() || ''
+
+    const lastName =
+      data.last_name?.trim() || ''
+
+    userName.value =
+      `${lastName}`.trim() || 'User'
+
+    localStorage.setItem(
+      'user_name',
+      userName.value
+    )
+
+  } catch (error) {
+    console.error(
+      'Profile loading error:',
+      error
+    )
+
+    userName.value =
+      localStorage.getItem('user_name') ||
+      'User'
+  }
+}
+
 const profileOpen = ref(false)
+
+
+/* =========================================================
+   RIDE STEP
+========================================================= */
+
+const step = ref('pickup')
+
 
 /* =========================================================
    MAP
@@ -527,20 +901,25 @@ let map = null
 let pickupMarker = null
 let dropoffMarker = null
 
-const DHAKA_CENTER = [90.4125, 23.8103]
+const DHAKA_CENTER = [
+  90.4125,
+  23.8103
+]
 
-/*
-  This is intentionally a little larger than central Dhaka.
-  We validate the actual selected coordinate instead of
-  relying on Mapbox's address text.
-*/
 const DHAKA_BOUNDS = [
   [90.25, 23.65],
   [90.55, 23.95]
 ]
 
-const isInsideDhaka = (lat, lon) => {
-  const [[west, south], [east, north]] = DHAKA_BOUNDS
+const isInsideDhaka = (
+  lat,
+  lon
+) => {
+
+  const [
+    [west, south],
+    [east, north]
+  ] = DHAKA_BOUNDS
 
   return (
     lon >= west &&
@@ -549,6 +928,7 @@ const isInsideDhaka = (lat, lon) => {
     lat <= north
   )
 }
+
 
 /* =========================================================
    LOCATION STATE
@@ -569,99 +949,113 @@ const dropoffFocused = ref(false)
 const pickupLoading = ref(false)
 const dropoffLoading = ref(false)
 
-let pickupSearchTimer = null
-let dropoffSearchTimer = null
+let pickupTimer = null
+let dropoffTimer = null
 
-const locationMessage = ref('')
-const locationMessageType = ref('success')
-
-let messageTimer = null
 
 /* =========================================================
-   RIDE / FARE
+   MAP SELECTION
 ========================================================= */
 
-const distance = ref(null)
-const duration = ref(null)
+const mapSelecting = ref(false)
 
-const vehicles = ref([])
-const vehiclesLoading = ref(false)
+const mapSelectionType = ref(null)
 
-const selectedVehicle = ref(null)
+const mapCenterLocation = ref(null)
 
-const fares = ref({})
-const fareLoading = ref(false)
+let reverseTimer = null
 
-const couponCode = ref('')
-const couponMessage = ref('')
-const couponMessageType = ref('success')
 
-const requestLoading = ref(false)
+const pendingLocation = ref(null)
+
 
 /* =========================================================
    CURRENT LOCATION
 ========================================================= */
 
 const locationLoading = ref(false)
+
 const currentLocationTarget = ref(null)
 
+
 /* =========================================================
-   AUTH
+   ROUTE
 ========================================================= */
 
-const token = () => localStorage.getItem('token')
+const distance = ref(null)
+const duration = ref(null)
 
-const authHeaders = () => ({
-  'Content-Type': 'application/json',
 
-  ...(token()
-    ? {
-        Authorization: `Bearer ${token()}`
-      }
-    : {})
-})
+/* =========================================================
+   VEHICLES
+========================================================= */
+
+const vehicles = ref([])
+
+const vehiclesLoading = ref(false)
+
+const selectedVehicle = ref(null)
+
+
+/* =========================================================
+   FARES
+========================================================= */
+
+const fares = ref({})
+
+const fareLoading = ref(false)
+
+
+/* =========================================================
+   COUPON
+========================================================= */
+
+const couponCode = ref('')
+
+const couponMessage = ref('')
+
+const couponMessageType = ref('success')
+
+
+/* =========================================================
+   REQUEST
+========================================================= */
+
+const requestLoading = ref(false)
+
 
 /* =========================================================
    MESSAGE
 ========================================================= */
 
-const showMessage = (message, type = 'success') => {
-  locationMessage.value = message
-  locationMessageType.value = type
+const message = ref('')
 
-  clearTimeout(messageTimer)
+const messageType = ref('success')
 
-  messageTimer = setTimeout(() => {
-    locationMessage.value = ''
-  }, 3500)
-}
+let messageTimer = null
+
 
 /* =========================================================
-   MAPBOX FORWARD SEARCH
+   AUTH
 ========================================================= */
 
-/*
-  IMPORTANT:
+const authHeaders = () => {
 
-  Do NOT filter the returned results by the text
-  "Dhaka".
+  const token =
+    localStorage.getItem('token')
 
-  We validate latitude/longitude instead.
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  }
+}
 
-  This allows:
-  BUET
-  Dhanmondi
-  Gulshan
-  Bashundhara City
-  Hospitals
-  Universities
-  Restaurants
-  etc.
 
-  to work normally.
-*/
+/* =========================================================
+   MAPBOX SEARCH
+========================================================= */
 
-const mapboxSearch = async (query) => {
+const searchMapbox = async (query) => {
   if (!MAPBOX_TOKEN) {
     throw new Error('Mapbox token is missing')
   }
@@ -673,19 +1067,34 @@ const mapboxSearch = async (query) => {
   }
 
   const url = new URL(
-    'https://api.mapbox.com/search/geocode/v6/forward'
+    'https://api.mapbox.com/search/searchbox/v1/suggest'
   )
 
   url.searchParams.set('q', q)
 
-  /*
-    Search around Dhaka.
-    This does NOT reject a result merely because
-    its address text doesn't contain "Dhaka".
-  */
   url.searchParams.set(
-    'bbox',
-    '90.25,23.65,90.55,23.95'
+    'session_token',
+    getSessionToken()
+  )
+
+  url.searchParams.set(
+    'access_token',
+    MAPBOX_TOKEN
+  )
+
+  url.searchParams.set(
+    'language',
+    'en'
+  )
+
+  url.searchParams.set(
+    'country',
+    'BD'
+  )
+
+  url.searchParams.set(
+    'limit',
+    '10'
   )
 
   url.searchParams.set(
@@ -693,732 +1102,717 @@ const mapboxSearch = async (query) => {
     `${DHAKA_CENTER[0]},${DHAKA_CENTER[1]}`
   )
 
-  url.searchParams.set(
-    'types',
-    'poi,address,street,neighborhood,locality,place'
-  )
-
-  url.searchParams.set('autocomplete', 'true')
-  url.searchParams.set('limit', '10')
-  url.searchParams.set('language', 'en')
-  url.searchParams.set('access_token', MAPBOX_TOKEN)
-
   const response = await fetch(url)
 
   if (!response.ok) {
-    const text = await response.text()
-    console.error('Mapbox search error:', text)
+    const errorText = await response.text()
 
-    throw new Error('Mapbox search failed')
+    console.error(
+      'Mapbox Search Box error:',
+      response.status,
+      errorText
+    )
+
+    throw new Error(
+      `Mapbox search failed: ${response.status}`
+    )
   }
 
   const data = await response.json()
 
-  const features = data.features || []
-
-  /*
-    Coordinate validation ONLY.
-  */
-  return features
-    .map(feature => {
-      const coordinates =
-        feature.geometry?.coordinates
-
-      if (
-        !coordinates ||
-        coordinates.length < 2
-      ) {
-        return null
-      }
-
-      const lon = Number(coordinates[0])
-      const lat = Number(coordinates[1])
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-        return null
-      }
-
-      return {
-        id: feature.id,
-
-        name:
-          feature.properties?.name ||
-          feature.text ||
-          'Selected location',
-
-        address:
-          feature.properties?.full_address ||
-          feature.properties?.place_formatted ||
-          feature.place_name ||
-          '',
-
-        lat,
-        lon,
-
-        featureType:
-          feature.properties?.feature_type ||
-          feature.place_type?.[0] ||
-          ''
-      }
-    })
-    .filter(Boolean)
-    .filter(place =>
-      isInsideDhaka(place.lat, place.lon)
-    )
+  return data.suggestions || []
 }
 
 /* =========================================================
-   REVERSE GEOCODING
+   SEARCH SESSION
 ========================================================= */
 
-/*
-  Reverse geocoding was previously returning things like:
+let searchSessionToken =
+  crypto.randomUUID()
 
-      1100
+const getSessionToken = () => {
 
-  because Mapbox sometimes chooses a postcode/address
-  feature.
-
-  We now try to find the most meaningful feature.
-*/
-
-const reverseGeocode = async (lat, lon) => {
-  if (!MAPBOX_TOKEN) {
-    return {
-      name: 'Selected location',
-      address: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
-      lat,
-      lon
-    }
+  if (!searchSessionToken) {
+    searchSessionToken =
+      crypto.randomUUID()
   }
 
+  return searchSessionToken
+}
+
+
+const resetSearchSession = () => {
+  searchSessionToken =
+    crypto.randomUUID()
+}
+
+
+/* =========================================================
+   RETRIEVE SEARCH RESULT
+========================================================= */
+
+const retrieveSearchResult = async (mapboxId) => {
+
   const url = new URL(
-    'https://api.mapbox.com/search/geocode/v6/reverse'
+    `https://api.mapbox.com/search/searchbox/v1/retrieve/${mapboxId}`
   )
 
   url.searchParams.set(
-    'longitude',
-    lon
+    'session_token',
+    getSessionToken()
   )
 
-  url.searchParams.set(
-    'latitude',
-    lat
-  )
-
-  /*
-    Request several possible feature types.
-  */
-  url.searchParams.set(
-    'types',
-    'poi,address,street,neighborhood,locality,place'
-  )
-
-  url.searchParams.set('limit', '10')
-  url.searchParams.set('language', 'en')
   url.searchParams.set(
     'access_token',
     MAPBOX_TOKEN
   )
 
+  url.searchParams.set(
+    'language',
+    'en'
+  )
+
   const response = await fetch(url)
 
   if (!response.ok) {
-    throw new Error('Reverse geocoding failed')
-  }
 
-  const data = await response.json()
+    const errorText =
+      await response.text()
 
-  const features = data.features || []
-
-  /*
-    First preference:
-    POI / named place
-  */
-
-  let selected = features.find(feature => {
-    const type =
-      feature.properties?.feature_type ||
-      feature.place_type?.[0]
-
-    const name =
-      feature.properties?.name ||
-      feature.text ||
-      ''
-
-    return (
-      type === 'poi' &&
-      name &&
-      !/^\d+$/.test(name.trim())
+    console.error(
+      'Mapbox retrieve error:',
+      response.status,
+      errorText
     )
-  })
 
-  /*
-    Second preference:
-    neighborhood/locality/place
-  */
-
-  if (!selected) {
-    selected = features.find(feature => {
-      const type =
-        feature.properties?.feature_type ||
-        feature.place_type?.[0]
-
-      const name =
-        feature.properties?.name ||
-        feature.text ||
-        ''
-
-      return (
-        ['neighborhood', 'locality', 'place'].includes(type) &&
-        name &&
-        !/^\d+$/.test(name.trim())
-      )
-    })
+    throw new Error(
+      `Mapbox retrieve failed: ${response.status}`
+    )
   }
 
-  /*
-    Third preference:
-    address, but don't use a pure number as name.
-  */
+  const data =
+    await response.json()
 
-  if (!selected) {
-    selected = features.find(feature => {
-      const name =
-        feature.properties?.name ||
-        feature.text ||
-        ''
+  const feature =
+    data.features?.[0]
 
-      return (
-        name &&
-        !/^\d+$/.test(name.trim())
-      )
-    })
+  if (!feature) {
+    return null
   }
 
-  /*
-    Last fallback.
-  */
+  const coordinates =
+    feature.geometry?.coordinates
 
-  if (!selected) {
-    selected = features[0]
+  if (
+    !coordinates ||
+    coordinates.length < 2
+  ) {
+    return null
   }
 
-  if (!selected) {
-    return {
-      name: 'Selected location',
-      address: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
-      lat,
-      lon
-    }
-  }
+  const lon =
+    Number(coordinates[0])
 
-  const rawName =
-    selected.properties?.name ||
-    selected.text ||
-    ''
+  const lat =
+    Number(coordinates[1])
 
-  const fullAddress =
-    selected.properties?.full_address ||
-    selected.properties?.place_formatted ||
-    selected.place_name ||
-    ''
-
-  const cleanName =
-    rawName &&
-    !/^\d+$/.test(rawName.trim())
-      ? rawName
-      : 'Selected location'
+  const props =
+    feature.properties || {}
 
   return {
-    name: cleanName,
+
+    id:
+      feature.id ||
+      mapboxId,
+
+    name:
+      props.name ||
+      props.name_preferred ||
+      feature.text ||
+      'Selected location',
+
     address:
-      fullAddress ||
-      `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+      props.full_address ||
+      props.place_formatted ||
+      feature.place_name ||
+      'Dhaka',
+
     lat,
     lon
   }
 }
 
 /* =========================================================
-   MARKERS
+   REVERSE GEOCODING
 ========================================================= */
 
-/*
-  NO "P"
-  NO "D"
+const reverseGeocode = async (
+  lat,
+  lon
+) => {
 
-  Just simple colored dots.
-*/
+  if (!MAPBOX_TOKEN) {
 
-const createMarker = type => {
-  const el = document.createElement('div')
+    return {
 
-  el.className =
-    type === 'pickup'
-      ? 'custom-marker pickup'
-      : 'custom-marker dropoff'
+      name:
+        'Selected location',
 
-  return el
-}
+      address:
+        `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
 
-const setMarker = (type, location) => {
-  if (!map) return
-
-  if (type === 'pickup' && pickupMarker) {
-    pickupMarker.remove()
-  }
-
-  if (type === 'dropoff' && dropoffMarker) {
-    dropoffMarker.remove()
-  }
-
-  const marker = new mapboxgl.Marker({
-    element: createMarker(type),
-    draggable: true,
-    anchor: 'center'
-  })
-    .setLngLat([
-      location.lon,
-      location.lat
-    ])
-    .addTo(map)
-
-  marker.on('dragend', () => {
-    handleMarkerDrag(type, marker)
-  })
-
-  if (type === 'pickup') {
-    pickupMarker = marker
-  } else {
-    dropoffMarker = marker
-  }
-}
-
-/* =========================================================
-   MARKER DRAG
-========================================================= */
-
-const handleMarkerDrag = async (type, marker) => {
-  const { lng, lat } = marker.getLngLat()
-
-  if (!isInsideDhaka(lat, lng)) {
-    showMessage(
-      'Please keep the location inside Dhaka.',
-      'error'
-    )
-
-    const oldLocation =
-      type === 'pickup'
-        ? pickupLocation.value
-        : dropoffLocation.value
-
-    if (oldLocation) {
-      marker.setLngLat([
-        oldLocation.lon,
-        oldLocation.lat
-      ])
+      lat,
+      lon
     }
-
-    return
   }
 
-  try {
-    const place =
-      await reverseGeocode(lat, lng)
 
-    if (type === 'pickup') {
-      pickupLocation.value = place
-      pickupQuery.value = place.name
-    } else {
-      dropoffLocation.value = place
-      dropoffQuery.value = place.name
+  const url =
+    new URL(
+      'https://api.mapbox.com/search/searchbox/v1/reverse'
+    )
+
+
+  url.searchParams.set(
+    'longitude',
+    String(lon)
+  )
+
+  url.searchParams.set(
+    'latitude',
+    String(lat)
+  )
+
+  url.searchParams.set(
+    'language',
+    'en'
+  )
+
+  url.searchParams.set(
+    'limit',
+    '10'
+  )
+
+  url.searchParams.set(
+    'access_token',
+    MAPBOX_TOKEN
+  )
+
+
+  const response =
+    await fetch(url)
+
+
+  if (!response.ok) {
+
+    const errorText =
+      await response.text()
+
+    console.error(
+      'Mapbox reverse error:',
+      response.status,
+      errorText
+    )
+
+    /*
+     * Don't make map selection fail
+     * just because Mapbox couldn't
+     * give us a name.
+     */
+
+    return {
+
+      name:
+        'Selected location',
+
+      address:
+        `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+
+      lat,
+      lon
     }
-
-    await refreshRouteAndFare()
-
-  } catch (error) {
-    console.error(error)
-
-    showMessage(
-      'Could not update the selected location.',
-      'error'
-    )
-  }
-}
-
-/* =========================================================
-   SELECT LOCATION
-========================================================= */
-
-const selectLocation = async (place, type) => {
-  if (
-    !isInsideDhaka(
-      place.lat,
-      place.lon
-    )
-  ) {
-    showMessage(
-      'This location is outside the Dhaka service area.',
-      'error'
-    )
-
-    return
   }
 
-  if (type === 'pickup') {
-    pickupLocation.value = place
 
-    pickupQuery.value =
-      place.name || 'Selected location'
+  const data =
+    await response.json()
 
-    pickupSuggestions.value = []
-    pickupFocused.value = false
 
-    setMarker('pickup', place)
+  const features =
+    data.features || []
 
-  } else {
-    dropoffLocation.value = place
 
-    dropoffQuery.value =
-      place.name || 'Selected location'
+  if (!features.length) {
 
-    dropoffSuggestions.value = []
-    dropoffFocused.value = false
+    return {
 
-    setMarker('dropoff', place)
+      name:
+        'Selected location',
+
+      address:
+        `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+
+      lat,
+      lon
+    }
   }
 
-  if (map) {
-    map.flyTo({
-      center: [
-        place.lon,
-        place.lat
-      ],
-      zoom: 14,
-      duration: 600
-    })
-  }
 
   /*
-    Only calculate after both locations exist.
-  */
+   * Prefer named POI.
+   */
 
-  if (
-    pickupLocation.value &&
-    dropoffLocation.value
-  ) {
-    await refreshRouteAndFare()
+  let selected =
+    features.find(
+      feature => {
+
+        const props =
+          feature.properties || {}
+
+        const name =
+          props.name ||
+          feature.text ||
+          ''
+
+        const type =
+          props.feature_type ||
+          feature.properties?.feature_type ||
+          feature.place_type?.[0] ||
+          ''
+
+        return (
+          type === 'poi' &&
+          name &&
+          !/^\d+$/.test(
+            name.trim()
+          )
+        )
+      }
+    )
+
+
+  /*
+   * Otherwise choose any meaningful
+   * named feature.
+   */
+
+  if (!selected) {
+
+    selected =
+      features.find(
+        feature => {
+
+          const props =
+            feature.properties || {}
+
+          const name =
+            props.name ||
+            feature.text ||
+            ''
+
+          return (
+            name &&
+            !/^\d+$/.test(
+              name.trim()
+            )
+          )
+        }
+      )
+  }
+
+
+  if (!selected) {
+
+    return {
+
+      name:
+        'Selected location',
+
+      address:
+        `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+
+      lat,
+      lon
+    }
+  }
+
+
+  const props =
+    selected.properties || {}
+
+
+  const name =
+    props.name ||
+    selected.text ||
+    'Selected location'
+
+
+  const address =
+    props.full_address ||
+    props.place_formatted ||
+    selected.place_name ||
+    `${lat.toFixed(5)}, ${lon.toFixed(5)}`
+
+
+  return {
+
+    name,
+
+    address,
+
+    lat,
+
+    lon
   }
 }
 
-const selectPickupSuggestion =
-  place =>
-    selectLocation(place, 'pickup')
-
-const selectDropoffSuggestion =
-  place =>
-    selectLocation(place, 'dropoff')
-
 /* =========================================================
-   PICKUP SEARCH
+   PICKUP AUTOCOMPLETE
 ========================================================= */
 
-const handlePickupInput = () => {
-  pickupLocation.value = null
+const onPickupInput = () => {
 
-  if (pickupMarker) {
-    pickupMarker.remove()
-    pickupMarker = null
-  }
+  pickupLocation.value = null
 
   pickupSuggestions.value = []
 
-  clearTimeout(pickupSearchTimer)
+  clearTimeout(
+    pickupTimer
+  )
 
   const query =
     pickupQuery.value.trim()
+
 
   if (query.length < 2) {
     pickupFocused.value = false
     return
   }
 
+
   pickupFocused.value = true
 
-  pickupSearchTimer = setTimeout(
-    async () => {
-      pickupLoading.value = true
+  pickupTimer =
+    setTimeout(
+      async () => {
 
-      try {
-        pickupSuggestions.value =
-          await mapboxSearch(query)
+        pickupLoading.value = true
 
-      } catch (error) {
-        console.error(error)
+        try {
 
-        showMessage(
-          'Location search failed.',
-          'error'
-        )
+          pickupSuggestions.value =
+            await searchMapbox(query)
 
-      } finally {
-        pickupLoading.value = false
-      }
-    },
-    250
-  )
+        } catch (error) {
+
+          console.error(
+            error
+          )
+
+          showMessage(
+            'Location search failed.',
+            'error'
+          )
+
+        } finally {
+
+          pickupLoading.value = false
+
+        }
+
+      },
+      300
+    )
 }
 
+
 /* =========================================================
-   DROPOFF SEARCH
+   DROPOFF AUTOCOMPLETE
 ========================================================= */
 
-const handleDropoffInput = () => {
-  dropoffLocation.value = null
+const onDropoffInput = () => {
 
-  if (dropoffMarker) {
-    dropoffMarker.remove()
-    dropoffMarker = null
-  }
+  dropoffLocation.value = null
 
   dropoffSuggestions.value = []
 
-  clearTimeout(dropoffSearchTimer)
+  clearTimeout(
+    dropoffTimer
+  )
 
   const query =
     dropoffQuery.value.trim()
+
 
   if (query.length < 2) {
     dropoffFocused.value = false
     return
   }
 
+
   dropoffFocused.value = true
 
-  dropoffSearchTimer = setTimeout(
-    async () => {
-      dropoffLoading.value = true
+  dropoffTimer =
+    setTimeout(
+      async () => {
 
-      try {
-        dropoffSuggestions.value =
-          await mapboxSearch(query)
+        dropoffLoading.value = true
 
-      } catch (error) {
-        console.error(error)
+        try {
 
-        showMessage(
-          'Location search failed.',
-          'error'
-        )
+          dropoffSuggestions.value =
+            await searchMapbox(query)
 
-      } finally {
-        dropoffLoading.value = false
-      }
-    },
-    250
-  )
+        } catch (error) {
+
+          console.error(
+            error
+          )
+
+          showMessage(
+            'Location search failed.',
+            'error'
+          )
+
+        } finally {
+
+          dropoffLoading.value = false
+
+        }
+
+      },
+      300
+    )
 }
 
+
 /* =========================================================
-   SEARCH BUTTONS
+   SEARCH RESULT SELECTION
 ========================================================= */
 
-const searchPickup = async () => {
-  const query =
-    pickupQuery.value.trim()
-
-  if (query.length < 2) {
-    showMessage(
-      'Please enter a pickup location.',
-      'error'
-    )
-
-    return
-  }
-
-  pickupLoading.value = true
+const chooseSearchResult = async (
+  suggestion,
+  type
+) => {
 
   try {
-    const results =
-      await mapboxSearch(query)
 
-    if (!results.length) {
+    resetSearchSession()
+
+    const place =
+      await retrieveSearchResult(
+        suggestion.mapbox_id
+      )
+
+    if (!place) {
+
       showMessage(
-        'No matching location found inside Dhaka.',
+        'Could not determine the selected location.',
         'error'
       )
 
       return
     }
 
-    await selectLocation(
-      results[0],
-      'pickup'
-    )
+    if (
+      !isInsideDhaka(
+        place.lat,
+        place.lon
+      )
+    ) {
 
-  } catch (error) {
-    console.error(error)
-
-    showMessage(
-      'Location search failed.',
-      'error'
-    )
-
-  } finally {
-    pickupLoading.value = false
-  }
-}
-
-const searchDropoff = async () => {
-  const query =
-    dropoffQuery.value.trim()
-
-  if (query.length < 2) {
-    showMessage(
-      'Please enter a drop-off location.',
-      'error'
-    )
-
-    return
-  }
-
-  dropoffLoading.value = true
-
-  try {
-    const results =
-      await mapboxSearch(query)
-
-    if (!results.length) {
       showMessage(
-        'No matching location found inside Dhaka.',
+        'This location is outside the Dhaka service area.',
         'error'
       )
 
       return
     }
 
-    await selectLocation(
-      results[0],
-      'dropoff'
+
+    if (type === 'pickup') {
+
+      pickupQuery.value =
+        place.name
+
+      pickupSuggestions.value =
+        []
+
+      pickupFocused.value =
+        false
+
+    } else {
+
+      dropoffQuery.value =
+        place.name
+
+      dropoffSuggestions.value =
+        []
+
+      dropoffFocused.value =
+        false
+    }
+
+
+    await setConfirmedLocation(
+      place,
+      type
     )
 
   } catch (error) {
-    console.error(error)
 
-    showMessage(
-      'Location search failed.',
-      'error'
+    console.error(
+      'Location selection error:',
+      error
     )
 
-  } finally {
-    dropoffLoading.value = false
+    showMessage(
+      'Could not select this location.',
+      'error'
+    )
   }
 }
 
 /* =========================================================
-   CURRENT LOCATION
+   MAP SELECTION
 ========================================================= */
 
-const useCurrentLocation = type => {
-  if (!navigator.geolocation) {
-    showMessage(
-      'Your browser does not support location services.',
-      'error'
+const startMapSelection = type => {
+
+  mapSelectionType.value =
+    type
+
+  mapSelecting.value =
+    true
+
+  pendingLocation.value =
+    null
+
+
+  if (map) {
+
+    const center =
+      map.getCenter()
+
+    updateMapCenter(
+      center.lat,
+      center.lng
     )
+  }
+}
+
+
+/* =========================================================
+   MAP MOVEMENT
+========================================================= */
+
+const handleMapMove = () => {
+
+  if (!mapSelecting.value) {
+    return
+  }
+
+  const center =
+    map.getCenter()
+
+  clearTimeout(
+    reverseTimer
+  )
+
+  reverseTimer =
+    setTimeout(
+      () => {
+
+        updateMapCenter(
+          center.lat,
+          center.lng
+        )
+
+      },
+      300
+    )
+}
+
+
+/* =========================================================
+   UPDATE MAP CENTER LOCATION
+========================================================= */
+
+const updateMapCenter = async (
+  lat,
+  lon
+) => {
+
+  if (
+    !isInsideDhaka(
+      lat,
+      lon
+    )
+  ) {
+
+    mapCenterLocation.value = {
+      name: 'Outside service area',
+      address:
+        'Move the map inside Dhaka',
+      lat,
+      lon
+    }
 
     return
   }
 
-  locationLoading.value = true
-  currentLocationTarget.value = type
 
-  navigator.geolocation.getCurrentPosition(
-    async position => {
-      const lat =
-        position.coords.latitude
+  mapCenterLocation.value = null
 
-      const lon =
-        position.coords.longitude
 
-      locationLoading.value = false
-      currentLocationTarget.value = null
+  try {
 
-      if (!isInsideDhaka(lat, lon)) {
-        showMessage(
-          'Your current location is outside Dhaka.',
-          'error'
-        )
+    const place =
+      await reverseGeocode(
+        lat,
+        lon
+      )
 
-        return
-      }
+    mapCenterLocation.value =
+      place
 
-      try {
-        const place =
-          await reverseGeocode(lat, lon)
+  } catch (error) {
 
-        await selectLocation(
-          place,
-          type
-        )
+    console.error(
+      error
+    )
 
-        showMessage(
-          `${type === 'pickup' ? 'Pickup' : 'Drop-off'} set to your current location.`,
-          'success'
-        )
-
-      } catch (error) {
-        console.error(error)
-
-        showMessage(
-          'Could not read your current location.',
-          'error'
-        )
-      }
-    },
-
-    error => {
-      locationLoading.value = false
-      currentLocationTarget.value = null
-
-      if (error.code === 1) {
-        showMessage(
-          'Location permission was denied.',
-          'error'
-        )
-      } else {
-        showMessage(
-          'Unable to get your current location.',
-          'error'
-        )
-      }
-    },
-
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 30000
+    mapCenterLocation.value = {
+      name: 'Selected location',
+      address:
+        `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+      lat,
+      lon
     }
-  )
+  }
 }
 
+
 /* =========================================================
-   MAP CLICK
+   CONFIRM MAP CENTER
 ========================================================= */
 
-const handleMapClick = async event => {
-  const lat =
-    event.lngLat.lat
+const confirmMapCenter = async () => {
 
-  const lon =
-    event.lngLat.lng
+  if (
+    !mapCenterLocation.value
+  ) {
+    return
+  }
 
-  /*
-    IMPORTANT:
-    We validate coordinates only.
-  */
 
-  if (!isInsideDhaka(lat, lon)) {
+  if (
+    !isInsideDhaka(
+      mapCenterLocation.value.lat,
+      mapCenterLocation.value.lon
+    )
+  ) {
+
     showMessage(
       'Please select a location inside Dhaka.',
       'error'
@@ -1427,79 +1821,428 @@ const handleMapClick = async event => {
     return
   }
 
-  /*
-    First click = pickup
-    Second click = dropoff
-    Third click = replace pickup
-  */
 
-  let type
+  pendingLocation.value =
+    mapCenterLocation.value
 
-  if (!pickupLocation.value) {
-    type = 'pickup'
-  } else if (!dropoffLocation.value) {
-    type = 'dropoff'
-  } else {
-    type = 'pickup'
-  }
+  mapSelecting.value =
+    false
 
-  try {
-    const place =
-      await reverseGeocode(lat, lon)
 
-    await selectLocation(
-      place,
-      type
-    )
+  await confirmPendingLocation()
+}
 
-    showMessage(
-      `${type === 'pickup' ? 'Pickup' : 'Drop-off'} selected from map.`,
-      'success'
-    )
 
-  } catch (error) {
-    console.error(error)
+/* =========================================================
+   CONFIRM PENDING LOCATION
+========================================================= */
 
-    /*
-      Even if reverse geocoding fails,
-      the map click should STILL work.
-    */
+const confirmPendingLocation =
+  async () => {
 
-    const fallback = {
-      name: 'Selected location',
-      address: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
-      lat,
-      lon
+    if (!pendingLocation.value) {
+      return
     }
 
-    await selectLocation(
-      fallback,
+    const type =
+      mapSelectionType.value ||
+      step.value
+
+
+    await setConfirmedLocation(
+      pendingLocation.value,
       type
+    )
+
+
+    pendingLocation.value =
+      null
+  }
+
+
+/* =========================================================
+   SET CONFIRMED LOCATION
+========================================================= */
+
+const setConfirmedLocation = async (
+  place,
+  type
+) => {
+
+  if (
+    !isInsideDhaka(
+      place.lat,
+      place.lon
+    )
+  ) {
+
+    showMessage(
+      'This location is outside the Dhaka service area.',
+      'error'
+    )
+
+    return
+  }
+
+
+  if (type === 'pickup') {
+
+    pickupLocation.value =
+      place
+
+    pickupQuery.value =
+      place.name ||
+      'Selected location'
+
+    pickupSuggestions.value =
+      []
+
+    pickupFocused.value =
+      false
+
+    setMarker(
+      'pickup',
+      place
+    )
+
+    step.value =
+      'dropoff'
+
+  } else {
+
+    dropoffLocation.value =
+      place
+
+    dropoffQuery.value =
+      place.name ||
+      'Selected location'
+
+    dropoffSuggestions.value =
+      []
+
+    dropoffFocused.value =
+      false
+
+    setMarker(
+      'dropoff',
+      place
+    )
+
+    step.value =
+      'complete'
+  }
+
+
+  if (map) {
+
+    map.flyTo({
+
+      center: [
+        place.lon,
+        place.lat
+      ],
+
+      zoom: 15,
+
+      duration: 700
+    })
+  }
+
+
+  /*
+   * Only calculate route after
+   * both locations are confirmed.
+   */
+
+  if (
+    pickupLocation.value &&
+    dropoffLocation.value
+  ) {
+
+    await refreshRouteAndFare()
+
+  } else {
+
+    showMessage(
+
+      type === 'pickup'
+        ? 'Pickup confirmed. Now select your destination.'
+        : 'Destination confirmed.',
+
+      'success'
     )
   }
 }
+
+/* =========================================================
+   CANCEL PENDING LOCATION
+========================================================= */
+
+const cancelPendingLocation = () => {
+
+  pendingLocation.value =
+    null
+}
+
+
+/* =========================================================
+   CLEAR PICKUP
+========================================================= */
+
+const clearPickup = () => {
+
+  pickupQuery.value = ''
+
+  pickupLocation.value =
+    null
+
+  pickupSuggestions.value =
+    []
+
+  step.value =
+    'pickup'
+
+  distance.value =
+    null
+
+  duration.value =
+    null
+
+  fares.value =
+    {}
+
+  selectedVehicle.value =
+    null
+
+  removeRoute()
+}
+
+
+/* =========================================================
+   CLEAR DROPOFF
+========================================================= */
+
+const clearDropoff = () => {
+
+  dropoffQuery.value = ''
+
+  dropoffLocation.value =
+    null
+
+  dropoffSuggestions.value =
+    []
+
+  step.value =
+    'dropoff'
+
+  distance.value =
+    null
+
+  duration.value =
+    null
+
+  fares.value =
+    {}
+
+  selectedVehicle.value =
+    null
+
+  removeRoute()
+}
+
+
+/* =========================================================
+   CHANGE LOCATIONS
+========================================================= */
+
+const changeLocations = () => {
+
+  step.value =
+    'pickup'
+
+  dropoffLocation.value =
+    null
+
+  dropoffQuery.value =
+    ''
+
+  distance.value =
+    null
+
+  duration.value =
+    null
+
+  fares.value =
+    {}
+
+  selectedVehicle.value =
+    null
+
+  removeRoute()
+}
+
+
+/* =========================================================
+   CURRENT LOCATION
+========================================================= */
+
+const useCurrentLocation =
+  type => {
+
+    if (!navigator.geolocation) {
+
+      showMessage(
+        'Your browser does not support location services.',
+        'error'
+      )
+
+      return
+    }
+
+
+    locationLoading.value =
+      true
+
+    currentLocationTarget.value =
+      type
+
+
+    navigator.geolocation.getCurrentPosition(
+
+      async position => {
+
+        const lat =
+          position.coords.latitude
+
+        const lon =
+          position.coords.longitude
+
+
+        locationLoading.value =
+          false
+
+        currentLocationTarget.value =
+          null
+
+
+        if (
+          !isInsideDhaka(
+            lat,
+            lon
+          )
+        ) {
+
+          showMessage(
+            'Your current location is outside Dhaka.',
+            'error'
+          )
+
+          return
+        }
+
+
+        try {
+
+          const place =
+            await reverseGeocode(
+              lat,
+              lon
+            )
+
+
+          if (map) {
+
+            map.flyTo({
+              center: [
+                lon,
+                lat
+              ],
+
+              zoom: 16,
+
+              duration: 700
+            })
+
+          }
+
+
+          await setConfirmedLocation(
+            place,
+            type
+          )
+
+        } catch (error) {
+
+          console.error(
+            error
+          )
+
+          showMessage(
+            'Could not determine your current location.',
+            'error'
+          )
+        }
+      },
+
+      error => {
+
+        locationLoading.value =
+          false
+
+        currentLocationTarget.value =
+          null
+
+
+        if (error.code === 1) {
+
+          showMessage(
+            'Location permission was denied.',
+            'error'
+          )
+
+        } else {
+
+          showMessage(
+            'Unable to get your current location.',
+            'error'
+          )
+        }
+      },
+
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000
+      }
+    )
+  }
+
 
 /* =========================================================
    ROUTE
 ========================================================= */
 
 const drawRoute = async () => {
+
   if (
     !map ||
     !pickupLocation.value ||
-    !dropoffLocation.value ||
-    !MAPBOX_TOKEN
+    !dropoffLocation.value
   ) {
     return
   }
+
 
   const coordinates =
     `${pickupLocation.value.lon},${pickupLocation.value.lat};` +
     `${dropoffLocation.value.lon},${dropoffLocation.value.lat}`
 
-  const url = new URL(
-    `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}`
-  )
+
+  const url =
+    new URL(
+      `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}`
+    )
+
 
   url.searchParams.set(
     'alternatives',
@@ -1521,40 +2264,53 @@ const drawRoute = async () => {
     MAPBOX_TOKEN
   )
 
+
   const response =
     await fetch(url)
 
+
   if (!response.ok) {
+
     throw new Error(
-      'Route request failed'
+      `Directions failed: ${response.status}`
     )
   }
+
 
   const data =
     await response.json()
 
+
   const route =
     data.routes?.[0]
 
+
   if (!route) {
+
     throw new Error(
       'No driving route found'
     )
   }
 
+
   distance.value =
     Number(
-      (route.distance / 1000)
-        .toFixed(2)
+      (
+        route.distance /
+        1000
+      ).toFixed(2)
     )
+
 
   duration.value =
     Math.max(
       1,
       Math.round(
-        route.duration / 60
+        route.duration /
+        60
       )
     )
+
 
   const geojson = {
     type: 'Feature',
@@ -1562,12 +2318,19 @@ const drawRoute = async () => {
     geometry: route.geometry
   }
 
-  if (map.getSource('route')) {
+
+  if (
+    map.getSource('route')
+  ) {
+
     map
       .getSource('route')
-      .setData(geojson)
+      .setData(
+        geojson
+      )
 
   } else {
+
     map.addSource(
       'route',
       {
@@ -1576,287 +2339,419 @@ const drawRoute = async () => {
       }
     )
 
+
     map.addLayer({
       id: 'route-line',
+
       type: 'line',
+
       source: 'route',
 
       layout: {
-        'line-cap': 'round',
-        'line-join': 'round'
+        'line-join': 'round',
+        'line-cap': 'round'
       },
 
       paint: {
         'line-color': '#20df4f',
         'line-width': 5,
-        'line-opacity': 0.9
+        'line-opacity': 0.85
       }
     })
   }
 
+
   const bounds =
     new mapboxgl.LngLatBounds()
 
-  route.geometry.coordinates.forEach(
-    coordinate => {
-      bounds.extend(coordinate)
-    }
-  )
+  bounds.extend([
+    pickupLocation.value.lon,
+    pickupLocation.value.lat
+  ])
+
+  bounds.extend([
+    dropoffLocation.value.lon,
+    dropoffLocation.value.lat
+  ])
 
   map.fitBounds(
     bounds,
     {
-      padding: 70,
+      padding: 100,
       duration: 700
     }
   )
 }
 
+
 /* =========================================================
-   VEHICLES
+   REMOVE ROUTE
 ========================================================= */
 
-const normalizeVehicle = vehicle => ({
-  id:
-    vehicle.id ??
-    vehicle.vehicle_id ??
-    vehicle.type,
+const removeRoute = () => {
 
-  type:
-    String(
-      vehicle.type ??
-      vehicle.vehicle_type ??
-      vehicle.name ??
-      ''
-    ).toUpperCase(),
+  if (!map) {
+    return
+  }
 
-  name:
-    vehicle.displayName ??
-    vehicle.display_name ??
-    vehicle.name ??
-    vehicle.type,
 
-  icon:
-    vehicle.icon ??
-    vehicle.emoji ??
-    '🚗',
+  if (
+    map.getLayer('route-line')
+  ) {
 
-  description:
-    vehicle.description ??
-    ''
-})
+    map.removeLayer(
+      'route-line'
+    )
+  }
+
+
+  if (
+    map.getSource('route')
+  ) {
+
+    map.removeSource(
+      'route'
+    )
+  }
+}
+
+
+/* =========================================================
+   LOAD VEHICLES
+========================================================= */
 
 const loadVehicles = async () => {
-  vehiclesLoading.value = true
+
+  vehiclesLoading.value =
+    true
+
 
   try {
+
     const response =
       await fetch(
         `${API_BASE_URL}/core/vehicles/types`,
         {
-          headers: authHeaders()
+          headers:
+            authHeaders()
         }
       )
 
+
+    const data =
+      await response.json()
+        .catch(
+          () => ({})
+        )
+
+
     if (!response.ok) {
+
       throw new Error(
+        data.message ||
         `Vehicle request failed: ${response.status}`
       )
     }
 
-    const data =
-      await response.json()
 
     const list =
-      Array.isArray(data)
-        ? data
-        : (
-            data.vehicles ||
-            data.vehicleTypes ||
-            data.data ||
-            []
-          )
+      data.vehicles ||
+      data.vehicleTypes ||
+      data.data ||
+      []
+
 
     vehicles.value =
       list
-        .map(normalizeVehicle)
+        .map(vehicle => ({
+          id:
+            vehicle.id ||
+            vehicle.vehicle_type_id ||
+            vehicle.type,
+
+          type:
+            String(
+              vehicle.type ||
+              vehicle.vehicle_type ||
+              vehicle.name ||
+              ''
+            ).toUpperCase(),
+
+          name:
+            vehicle.name ||
+            vehicle.vehicle_type ||
+            vehicle.type,
+
+          description:
+            vehicle.description ||
+            '',
+
+          icon:
+            vehicle.icon ||
+            '🚗'
+        }))
         .filter(
-          vehicle => vehicle.type
+          vehicle =>
+            vehicle.type
         )
+
 
     if (
       !selectedVehicle.value &&
       vehicles.value.length
     ) {
+
       selectedVehicle.value =
         vehicles.value[0].type
     }
 
   } catch (error) {
+
     console.error(
       'Vehicle loading error:',
       error
     )
 
     showMessage(
-      'Could not load available vehicle types.',
+      'Could not load vehicle types.',
       'error'
     )
 
   } finally {
-    vehiclesLoading.value = false
+
+    vehiclesLoading.value =
+      false
   }
 }
 
+
 /* =========================================================
-   FARE
+   CALCULATE FARES
 ========================================================= */
 
-/*
-  Frontend sends ONLY:
+const calculateAllFares =
+  async () => {
 
-      distance
-      couponCode
+    if (
+      distance.value === null
+    ) {
+      return
+    }
 
-  Backend returns ALL vehicle fares.
-*/
 
-const calculateAllFares = async () => {
-  if (
-    distance.value === null ||
-    distance.value === undefined
-  ) {
-    return
-  }
+    fareLoading.value =
+      true
 
-  fareLoading.value = true
 
-  try {
-    const response =
-      await fetch(
-        `${API_BASE_URL}/core/rides/fare`,
-        {
-          method: 'POST',
-          headers: authHeaders(),
+    try {
 
-          body: JSON.stringify({
-            distance: distance.value,
+      const response =
+        await fetch(
+          `${API_BASE_URL}/core/rides/fare`,
+          {
+            method: 'POST',
 
-            couponCode:
-              couponCode.value.trim() ||
-              null
-          })
+            headers:
+              authHeaders(),
+
+            body:
+              JSON.stringify({
+                distance:
+                  distance.value,
+
+                couponCode:
+                  couponCode.value.trim() ||
+                  null
+              })
+          }
+        )
+
+
+      const data =
+        await response.json()
+          .catch(
+            () => ({})
+          )
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.message ||
+          `Fare request failed: ${response.status}`
+        )
+      }
+
+
+      const list =
+        data.fares ||
+        data.data ||
+        []
+
+
+      const mapData = {}
+
+
+      list.forEach(
+        fare => {
+
+          const type =
+            String(
+              fare.vehicleType ||
+              fare.type ||
+              ''
+            ).toUpperCase()
+
+
+          if (!type) {
+            return
+          }
+
+
+          mapData[type] = {
+
+            fare:
+              Number(
+                fare.fare ??
+                fare.estimatedFare ??
+                fare.finalFare ??
+                0
+              ),
+
+            baseFare:
+              fare.baseFare ??
+              null,
+
+            perKm:
+              fare.perKm ??
+              fare.per_km ??
+              null,
+
+            discount:
+              Number(
+                fare.discount ??
+                fare.couponDiscount ??
+                0
+              )
+          }
         }
       )
 
-    if (!response.ok) {
-      throw new Error(
-        `Fare request failed: ${response.status}`
+
+      fares.value =
+        mapData
+
+
+    } catch (error) {
+
+      console.error(
+        'Fare calculation error:',
+        error
       )
+
+      showMessage(
+        error.message ||
+        'Could not calculate fares.',
+        'error'
+      )
+
+    } finally {
+
+      fareLoading.value =
+        false
     }
+  }
 
-    const data =
-      await response.json()
 
-    const list =
-      data.fares ||
-      data.data ||
-      []
+/* =========================================================
+   REFRESH ROUTE + FARE
+========================================================= */
 
-    const fareMap = {}
+const refreshRouteAndFare =
+  async () => {
 
-    list.forEach(fare => {
-      const type =
-        String(
-          fare.vehicleType ??
-          fare.type ??
-          ''
-        ).toUpperCase()
+    fares.value =
+      {}
 
-      if (!type) return
-
-      fareMap[type] = {
-        fare: Number(
-          fare.fare ??
-          fare.estimatedFare ??
-          fare.finalFare ??
-          0
-        ),
-
-        baseFare:
-          fare.baseFare ??
-          null,
-
-        perKm:
-          fare.perKm ??
-          fare.per_km ??
-          null,
-
-        discount:
-          Number(
-            fare.discount ??
-            fare.couponDiscount ??
-            0
-          )
-      }
-    })
-
-    fares.value = fareMap
 
     if (
-      !selectedVehicle.value &&
-      vehicles.value.length
+      !pickupLocation.value ||
+      !dropoffLocation.value
     ) {
-      selectedVehicle.value =
-        vehicles.value[0].type
+      return
     }
 
-  } catch (error) {
-    console.error(error)
 
-    showMessage(
-      'Could not calculate fares from the server.',
-      'error'
+    try {
+
+      await drawRoute()
+
+      await loadVehicles()
+
+      await calculateAllFares()
+
+    } catch (error) {
+
+      console.error(
+        error
+      )
+
+      showMessage(
+        'Could not build the route.',
+        'error'
+      )
+    }
+  }
+
+
+/* =========================================================
+   FARE HELPERS
+========================================================= */
+
+const fareFor =
+  type =>
+    fares.value[type]?.fare ??
+    null
+
+
+const selectedFare =
+  computed(() => {
+
+    if (
+      !selectedVehicle.value
+    ) {
+      return null
+    }
+
+    return (
+      fares.value[
+        selectedVehicle.value
+      ] ||
+      null
     )
+  })
 
-  } finally {
-    fareLoading.value = false
-  }
-}
 
-const fareFor = type =>
-  fares.value[type]?.fare ?? null
-
-const selectedFare = computed(() => {
-  if (!selectedVehicle.value) {
-    return null
-  }
-
-  return (
-    fares.value[
-      selectedVehicle.value
-    ] || null
+const selectedVehicleData =
+  computed(() =>
+    vehicles.value.find(
+      vehicle =>
+        vehicle.type ===
+        selectedVehicle.value
+    ) || null
   )
-})
 
-const selectedVehicleData = computed(() =>
-  vehicles.value.find(
-    vehicle =>
-      vehicle.type ===
-      selectedVehicle.value
-  ) || null
-)
-
-const selectVehicle = type => {
-  selectedVehicle.value = type
-}
 
 /* =========================================================
    COUPON
 ========================================================= */
 
 const applyCoupon = async () => {
-  if (!couponCode.value.trim()) {
+
+  if (
+    !couponCode.value.trim()
+  ) {
+
     couponMessage.value =
       'Enter a coupon code.'
 
@@ -1866,9 +2761,13 @@ const applyCoupon = async () => {
     return
   }
 
-  if (!distance.value) {
+
+  if (
+    !distance.value
+  ) {
+
     couponMessage.value =
-      'Select pickup and drop-off first.'
+      'Select pickup and destination first.'
 
     couponMessageType.value =
       'error'
@@ -1876,194 +2775,69 @@ const applyCoupon = async () => {
     return
   }
 
+
   couponMessage.value =
-    'Recalculating fares...'
+    'Validating coupon...'
 
   couponMessageType.value =
     'success'
+
 
   await calculateAllFares()
 
-  couponMessage.value =
-    'Coupon sent to the server for validation.'
-
-  couponMessageType.value =
-    'success'
-}
-
-/* =========================================================
-   ROUTE + FARE
-========================================================= */
-
-const refreshRouteAndFare = async () => {
-  fares.value = {}
 
   if (
-    !pickupLocation.value ||
-    !dropoffLocation.value
+    Object.keys(
+      fares.value
+    ).length
   ) {
-    distance.value = null
-    duration.value = null
 
-    if (
-      map &&
-      map.getSource('route')
-    ) {
-      map
-        .getSource('route')
-        .setData({
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: []
-          }
-        })
-    }
+    couponMessage.value =
+      'Coupon checked by the server.'
 
-    return
-  }
+  } else {
 
-  try {
-    await drawRoute()
+    couponMessage.value =
+      'Coupon could not be applied.'
 
-    /*
-      Load vehicle types from DB.
-    */
-    await loadVehicles()
-
-    /*
-      Send distance to backend.
-      Backend returns all fares.
-    */
-    await calculateAllFares()
-
-  } catch (error) {
-    console.error(error)
-
-    showMessage(
-      'Could not build the route. Please try another location.',
+    couponMessageType.value =
       'error'
-    )
   }
 }
 
-/* =========================================================
-   MAP SELECTION TEXT
-========================================================= */
-
-const mapSelectionText = computed(() => {
-  if (
-    pickupLocation.value &&
-    dropoffLocation.value
-  ) {
-    return 'Pickup and drop-off selected'
-  }
-
-  if (pickupLocation.value) {
-    return 'Pickup selected • Click for drop-off'
-  }
-
-  if (dropoffLocation.value) {
-    return 'Drop-off selected • Click for pickup'
-  }
-
-  return ''
-})
-
-/* =========================================================
-   INITIALIZE MAP
-========================================================= */
-
-const initializeMap = () => {
-  if (
-    !mapContainer.value ||
-    !MAPBOX_TOKEN
-  ) {
-    console.error(
-      'Mapbox token or map container missing'
-    )
-
-    return
-  }
-
-  mapboxgl.accessToken =
-    MAPBOX_TOKEN
-
-  map = new mapboxgl.Map({
-    container:
-      mapContainer.value,
-
-    style:
-      'mapbox://styles/mapbox/streets-v12',
-
-    center:
-      DHAKA_CENTER,
-
-    zoom: 12,
-
-    minZoom: 10,
-
-    maxZoom: 18
-  })
-
-  map.addControl(
-    new mapboxgl.NavigationControl(),
-    'top-right'
-  )
-
-  /*
-    IMPORTANT:
-
-    Do NOT use maxBounds here.
-
-    maxBounds can make the map behave badly around
-    the edge of Dhaka and can interfere with selecting
-    locations.
-
-    We validate the coordinates ourselves.
-  */
-
-  map.on(
-    'load',
-    () => {
-      map.resize()
-    }
-  )
-
-  /*
-    Attach click listener directly to map.
-  */
-  map.on(
-    'click',
-    handleMapClick
-  )
-}
 
 /* =========================================================
    REQUEST RIDE
 ========================================================= */
 
 const requestRide = async () => {
+
   if (
     !pickupLocation.value ||
     !dropoffLocation.value ||
-    !distance.value ||
+    !selectedVehicle.value ||
     !selectedFare.value
   ) {
+
     showMessage(
-      'Please select a valid route and vehicle first.',
+      'Please complete the ride details first.',
       'error'
     )
 
     return
   }
 
-  requestLoading.value = true
+
+  requestLoading.value =
+    true
+
 
   try {
+
     const payload = {
+
       pickup: {
+
         name:
           pickupLocation.value.name,
 
@@ -2077,7 +2851,9 @@ const requestRide = async () => {
           pickupLocation.value.lon
       },
 
+
       dropoff: {
+
         name:
           dropoffLocation.value.name,
 
@@ -2090,6 +2866,7 @@ const requestRide = async () => {
         longitude:
           dropoffLocation.value.lon
       },
+
 
       distance:
         distance.value,
@@ -2105,6 +2882,7 @@ const requestRide = async () => {
         null
     }
 
+
     const response =
       await fetch(
         `${API_BASE_URL}/core/rides/request`,
@@ -2119,17 +2897,36 @@ const requestRide = async () => {
         }
       )
 
+
     const data =
-      await response
-        .json()
-        .catch(() => ({}))
+      await response.json()
+        .catch(
+          () => ({})
+        )
+
 
     if (!response.ok) {
+
+      if (
+        response.status === 401
+      ) {
+
+        localStorage.clear()
+
+        router.push(
+          '/signin'
+        )
+
+        return
+      }
+
+
       throw new Error(
         data.message ||
         'Ride request failed'
       )
     }
+
 
     showMessage(
       data.message ||
@@ -2138,6 +2935,7 @@ const requestRide = async () => {
     )
 
   } catch (error) {
+
     console.error(
       'Request ride error:',
       error
@@ -2150,58 +2948,293 @@ const requestRide = async () => {
     )
 
   } finally {
-    requestLoading.value = false
+
+    requestLoading.value =
+      false
   }
 }
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+const showMessage = (
+  text,
+  type = 'success'
+) => {
+
+  message.value =
+    text
+
+  messageType.value =
+    type
+
+
+  clearTimeout(
+    messageTimer
+  )
+
+
+  messageTimer =
+    setTimeout(
+      () => {
+        message.value = ''
+      },
+      4000
+    )
+}
+
 
 /* =========================================================
    PROFILE
 ========================================================= */
 
 const goToProfile = () => {
-  profileOpen.value = false
 
-  router.push('/profile')
+  profileOpen.value =
+    false
+
+  router.push(
+    '/profile'
+  )
 }
+
 
 const signOut = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user_name')
-  localStorage.removeItem('name')
 
-  profileOpen.value = false
+  localStorage.clear()
 
-  router.push('/signin')
+  profileOpen.value =
+    false
+
+  router.push(
+    '/'
+  )
 }
+
 
 /* =========================================================
-   CLOSE DROPDOWNS
+   MAP INITIALIZATION
 ========================================================= */
 
-const closeMenus = event => {
-  if (
-    !event.target.closest(
-      '.profile-area'
-    )
-  ) {
-    profileOpen.value = false
-  }
+const initializeMap = () => {
 
   if (
-    !event.target.closest(
-      '.search-wrapper'
+    !mapContainer.value
+  ) {
+
+    console.error(
+      'Map container missing'
+    )
+
+    return
+  }
+
+
+  if (
+    !MAPBOX_TOKEN
+  ) {
+
+    console.error(
+      'VITE_MAPBOX_ACCESS_TOKEN is missing'
+    )
+
+    return
+  }
+
+
+  mapboxgl.accessToken =
+    MAPBOX_TOKEN
+
+
+  map =
+    new mapboxgl.Map({
+
+      container:
+        mapContainer.value,
+
+      style:
+        'mapbox://styles/mapbox/streets-v12',
+
+      center:
+        DHAKA_CENTER,
+
+      zoom:
+        12,
+
+      minZoom:
+        10,
+
+      maxZoom:
+        18
+
+    })
+
+
+  map.addControl(
+    new mapboxgl.NavigationControl(),
+    'top-right'
+  )
+
+
+  map.on(
+    'load',
+    () => {
+
+      map.resize()
+
+    }
+  )
+
+
+  map.on(
+    'move',
+    handleMapMove
+  )
+
+  map.on(
+  'click',
+  handleMapClick
+)
+}
+
+const handleMapClick = async event => {
+
+  const lat =
+    event.lngLat.lat
+
+  const lon =
+    event.lngLat.lng
+
+
+  if (
+    !isInsideDhaka(
+      lat,
+      lon
     )
   ) {
-    pickupFocused.value = false
-    dropoffFocused.value = false
+
+    showMessage(
+      'Please select a location inside Dhaka.',
+      'error'
+    )
+
+    return
+  }
+
+
+  let type
+
+  if (!pickupLocation.value) {
+
+    type = 'pickup'
+
+  } else if (!dropoffLocation.value) {
+
+    type = 'dropoff'
+
+  } else {
+
+    /*
+     * If both already exist,
+     * replace pickup.
+     */
+
+    type = 'pickup'
+  }
+
+
+  try {
+
+    const place =
+      await reverseGeocode(
+        lat,
+        lon
+      )
+
+
+    await setConfirmedLocation(
+      place,
+      type
+    )
+
+
+  } catch (error) {
+
+    console.error(
+      'Map selection error:',
+      error
+    )
+
+
+    /*
+     * Even if reverse geocoding
+     * fails, the coordinate itself
+     * is still usable.
+     */
+
+    const fallback = {
+
+      name:
+        'Selected location',
+
+      address:
+        `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+
+      lat,
+      lon
+    }
+
+
+    await setConfirmedLocation(
+      fallback,
+      type
+    )
   }
 }
+
+
+/* =========================================================
+   GLOBAL CLICK
+========================================================= */
+
+const handleDocumentClick =
+  event => {
+
+    if (
+      !event.target.closest(
+        '.profile-area'
+      )
+    ) {
+
+      profileOpen.value =
+        false
+    }
+
+
+    if (
+      !event.target.closest(
+        '.search-box'
+      )
+    ) {
+
+      pickupFocused.value =
+        false
+
+      dropoffFocused.value =
+        false
+    }
+  }
+
 
 /* =========================================================
    LIFECYCLE
 ========================================================= */
 
 onMounted(async () => {
+  await loadUserProfile()
+
   initializeMap()
 
   document.addEventListener(
@@ -2209,33 +3242,150 @@ onMounted(async () => {
     closeMenus
   )
 
-  /*
-    Vehicle types are loaded initially.
-    They will be refreshed after route selection.
-  */
   await loadVehicles()
 })
 
-onBeforeUnmount(() => {
-  map?.remove()
 
-  clearTimeout(
-    pickupSearchTimer
+onBeforeUnmount(
+  () => {
+
+    map?.remove()
+
+    clearTimeout(
+      pickupTimer
+    )
+
+    clearTimeout(
+      dropoffTimer
+    )
+
+    clearTimeout(
+      reverseTimer
+    )
+
+    clearTimeout(
+      messageTimer
+    )
+
+    document.removeEventListener(
+      'click',
+      handleDocumentClick
+    )
+  }
+)
+const createMarkerElement = type => {
+
+  const wrapper =
+    document.createElement('div')
+
+  wrapper.className =
+    `ride-marker ${type}`
+
+
+  const inner =
+    document.createElement('div')
+
+  inner.className =
+    'ride-marker-inner'
+
+
+  const label =
+    document.createElement('span')
+
+  label.className =
+    'ride-marker-label'
+
+  label.textContent =
+    type === 'pickup'
+      ? 'P'
+      : 'D'
+
+
+  inner.appendChild(label)
+
+  wrapper.appendChild(inner)
+
+  return wrapper
+}
+const setMarker = (
+  type,
+  location
+) => {
+
+  if (!map) {
+    return
+  }
+
+
+  if (
+    type === 'pickup' &&
+    pickupMarker
+  ) {
+
+    pickupMarker.remove()
+
+    pickupMarker =
+      null
+  }
+
+
+  if (
+    type === 'dropoff' &&
+    dropoffMarker
+  ) {
+
+    dropoffMarker.remove()
+
+    dropoffMarker =
+      null
+  }
+
+
+  const marker =
+    new mapboxgl.Marker({
+
+      element:
+        createMarkerElement(type),
+
+      draggable:
+        true,
+
+      anchor:
+        'bottom'
+
+    })
+      .setLngLat([
+        location.lon,
+        location.lat
+      ])
+      .addTo(map)
+
+
+  marker.on(
+    'dragend',
+    () => {
+
+      handleMarkerDrag(
+        type,
+        marker
+      )
+
+    }
   )
 
-  clearTimeout(
-    dropoffSearchTimer
-  )
 
-  clearTimeout(
-    messageTimer
-  )
+  if (type === 'pickup') {
 
-  document.removeEventListener(
-    'click',
-    closeMenus
-  )
-})
+    pickupMarker =
+      marker
+
+  } else {
+
+    dropoffMarker =
+      marker
+  }
+}
+
 </script>
 
 
@@ -2245,63 +3395,36 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
-:global(html),
-:global(body),
-:global(#app) {
+:global(body) {
   margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100%;
-  overflow-x: hidden;
+  font-family:
+    Inter,
+    Arial,
+    sans-serif;
 }
-
-
-/* =========================================================
-   PAGE
-========================================================= */
 
 .home-page {
   min-height: 100vh;
-
-  color: #111;
-
   background:
     linear-gradient(
       135deg,
-      #ffffff 0%,
-      #f7f8f7 48%,
-      #e8eee9 100%
+      #ffffff,
+      #f4f7f4
     );
+  color: #111;
 }
 
-
-/* =========================================================
-   NAVBAR
-========================================================= */
-
 .navbar {
-  height: 88px;
-
-  padding: 0 5.5%;
-
+  height: 82px;
+  padding: 0 5%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  border-bottom:
-    1px solid rgba(17,17,17,.08);
-
-  background:
-    rgba(255,255,255,.86);
-
-  backdrop-filter:
-    blur(18px);
-
+  background: rgba(255,255,255,.92);
+  border-bottom: 1px solid #e7e9e7;
   position: sticky;
-
   top: 0;
-
-  z-index: 1000;
+  z-index: 100;
 }
 
 .logo {
@@ -2311,119 +3434,64 @@ onBeforeUnmount(() => {
 }
 
 .logo-text {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -1.5px;
+  font-size: 30px;
+  font-weight: 750;
 }
 
-.logo-icon {
-  width: 34px;
-  height: 34px;
-
+.logo-mark {
+  width: 31px;
+  height: 31px;
   display: grid;
-
-  grid-template-columns:
-    15px 15px;
-
-  grid-template-rows:
-    15px 15px;
-
-  gap: 4px;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
 }
 
-.logo-icon span {
-  width: 15px;
-  height: 15px;
-
+.logo-mark span {
   background: #20df4f;
-
   border-radius: 50%;
-}
-
-.logo-icon span:nth-child(2) {
-  border-radius:
-    50% 50% 50% 0;
-}
-
-.logo-icon span:nth-child(3) {
-  border-radius:
-    50% 0 50% 50%;
-}
-
-.logo-icon span:nth-child(4) {
-  border-radius:
-    0 50% 50% 50%;
 }
 
 .nav-links {
   display: flex;
-  align-items: center;
-  gap: 34px;
+  gap: 30px;
 }
 
 .nav-links a {
-  color: #4f5551;
+  color: #555;
   text-decoration: none;
   font-size: 14px;
-  transition: .2s;
 }
 
 .nav-links a:hover {
   color: #159b36;
 }
 
-
-/* =========================================================
-   PROFILE
-========================================================= */
-
 .profile-area {
   position: relative;
 }
 
-.profile-btn {
+.profile-button {
+  border: 0;
+  background: transparent;
   display: flex;
   align-items: center;
   gap: 9px;
-
-  padding:
-    6px 12px 6px 6px;
-
-  border:
-    1px solid rgba(17,17,17,.1);
-
-  border-radius: 30px;
-
-  background:
-    rgba(255,255,255,.8);
-
-  color: #111;
-
   cursor: pointer;
-
-  font-size: 13px;
 }
 
-.profile-btn:hover {
-  border-color:
-    rgba(32,223,79,.55);
-}
-
-.profile-icon {
-  width: 32px;
-  height: 32px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
+.profile-avatar {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-
+  display: grid;
+  place-items: center;
   background: #20df4f;
+  font-weight: 700;
+}
 
-  color: #111;
-
-  font-weight: 800;
+.profile-name {
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .profile-arrow {
@@ -2432,1281 +3500,854 @@ onBeforeUnmount(() => {
 
 .profile-menu {
   position: absolute;
-
   right: 0;
   top: 48px;
-
-  width: 150px;
-
+  width: 170px;
   padding: 7px;
-
-  border:
-    1px solid rgba(0,0,0,.08);
-
-  border-radius: 14px;
-
-  background: #fff;
-
-  box-shadow:
-    0 18px 40px rgba(0,0,0,.12);
-
-  z-index: 1100;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0,0,0,.12);
 }
 
 .profile-menu button {
   width: 100%;
-
-  padding: 10px;
-
+  padding: 11px 12px;
   border: 0;
-
-  border-radius: 9px;
-
   background: transparent;
-
   text-align: left;
-
+  border-radius: 8px;
   cursor: pointer;
-
-  color: #222;
 }
 
 .profile-menu button:hover {
-  background: #f1f5f1;
+  background: #f2f5f2;
 }
 
-
-/* =========================================================
-   MAIN
-========================================================= */
-
-.main-content {
-  width: 100%;
-
-  max-width: 1450px;
-
+.page-content {
+  width: min(1380px, 92%);
   margin: 0 auto;
-
-  padding:
-    55px 5.5% 70px;
+  padding: 45px 0;
 }
 
-.welcome-section {
+.welcome {
   margin-bottom: 28px;
 }
 
-.welcome-small {
-  margin:
-    0 0 8px;
-
-  color: #149d36;
-
-  font-size: 13px;
-
-  font-weight: 700;
-
-  text-transform:
-    uppercase;
-
-  letter-spacing:
-    1.5px;
+.eyebrow {
+  margin: 0 0 8px;
+  color: #159b36;
+  font-size: 12px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.welcome-section h1 {
+.welcome h1 {
   margin: 0;
-
-  font-size:
-    clamp(32px,4vw,52px);
-
-  line-height: 1.1;
-
-  letter-spacing: -2px;
-
-  font-weight: 650;
+  font-size: 38px;
+  letter-spacing: -1.5px;
 }
 
-.welcome-section h1 span {
-  color: #149d36;
+.welcome h1 span {
+  color: #159b36;
 }
 
-.welcome-description {
-  margin:
-    12px 0 0;
-
-  color: #68706b;
-
-  font-size: 14px;
+.welcome p:last-child {
+  color: #777;
+  margin-top: 10px;
 }
 
-
-/* =========================================================
-   RIDE CARD
-========================================================= */
-
-.ride-card {
+.ride-layout {
   display: grid;
-
-  grid-template-columns:
-    minmax(400px,.82fr)
-    minmax(500px,1.18fr);
-
-  min-height: 680px;
-
-  border:
-    1px solid rgba(17,17,17,.08);
-
-  border-radius: 26px;
-
+  grid-template-columns: 440px 1fr;
+  min-height: 690px;
+  border-radius: 22px;
   overflow: hidden;
-
-  background:
-    rgba(255,255,255,.78);
-
-  box-shadow:
-    0 25px 80px
-    rgba(30,50,35,.12);
+  background: white;
+  box-shadow: 0 18px 55px rgba(0,0,0,.09);
 }
-
-
-/* =========================================================
-   LEFT PANEL
-========================================================= */
 
 .ride-panel {
-  padding: 32px;
-
-  overflow: visible;
-
-  background:
-    rgba(255,255,255,.88);
+  padding: 28px;
+  overflow-y: auto;
+  max-height: 690px;
 }
 
-.panel-header {
+.panel-title {
   display: flex;
-
-  justify-content:
-    space-between;
-
-  align-items:
-    flex-start;
-
-  margin-bottom: 28px;
+  justify-content: space-between;
+  margin-bottom: 27px;
 }
 
-.panel-header h2 {
-  margin:
-    0 0 5px;
-
-  font-size: 23px;
-
-  font-weight: 650;
+.panel-title h2 {
+  margin: 0 0 5px;
+  font-size: 22px;
 }
 
-.panel-header p {
+.panel-title p {
   margin: 0;
-
-  color: #7a817c;
-
+  color: #858585;
   font-size: 12px;
 }
 
-.location-status {
+.progress {
   display: flex;
   gap: 5px;
 }
 
-.location-status span {
+.progress span {
   width: 8px;
   height: 8px;
-
   border-radius: 50%;
-
-  background: #d5dad6;
+  background: #ddd;
 }
 
-.location-status span.active {
+.progress span.active {
   background: #20df4f;
-
-  box-shadow:
-    0 0 10px
-    rgba(32,223,79,.5);
 }
 
-
-/* =========================================================
-   LOCATION
-========================================================= */
-
-.location-group {
+.location-section {
   position: relative;
 }
 
-.location-group label {
-  display: block;
-
-  margin:
-    0 0 8px;
-
-  color: #505852;
-
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   font-size: 12px;
-
-  font-weight: 700;
+  font-weight: 750;
+  margin-bottom: 9px;
 }
 
-.location-input-row {
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  width: 100%;
-}
-
-.input-icon {
-  flex:
-    0 0 34px;
-
-  width: 34px;
-  height: 34px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
+.green-dot,
+.red-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-
-  font-size: 13px;
 }
 
-.pickup-icon {
-  color: #149d36;
-
-  background:
-    rgba(32,223,79,.12);
-}
-
-.dropoff-icon {
-  color: #e44c4c;
-
-  background:
-    rgba(255,107,107,.12);
-}
-
-.search-wrapper {
-  position: relative;
-
-  flex: 1;
-
-  min-width: 0;
-}
-
-.search-wrapper input {
-  width: 100%;
-
-  height: 50px;
-
-  padding:
-    0 15px;
-
-  border:
-    1px solid rgba(17,17,17,.11);
-
-  border-radius: 11px;
-
-  outline: none;
-
-  background:
-    rgba(255,255,255,.85);
-
-  color: #111;
-
-  font-size: 13px;
-
-  transition: .2s;
-}
-
-.search-wrapper input:focus {
-  border-color:
-    rgba(32,160,65,.55);
-
-  box-shadow:
-    0 0 0 3px
-    rgba(32,223,79,.08);
-}
-
-.search-wrapper input::placeholder {
-  color: #9aa19c;
-}
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-.search-btn {
-  flex:
-    0 0 68px;
-
-  height: 50px;
-
-  border: 0;
-
-  border-radius: 11px;
-
-  background:
-    rgba(32,223,79,.12);
-
-  color: #159b36;
-
-  font-size: 11px;
-
-  font-weight: 700;
-
-  cursor: pointer;
-}
-
-.search-btn:hover:not(:disabled) {
+.green-dot {
   background: #20df4f;
-  color: #111;
 }
 
-.search-btn:disabled {
-  opacity: .5;
-  cursor: not-allowed;
+.red-dot {
+  background: #ef5350;
 }
 
-.search-loading {
-  position: absolute;
+.search-box {
+  position: relative;
+}
 
-  top:
-    calc(100% + 6px);
-
-  left: 0;
-  right: 0;
-
-  z-index: 101;
-
-  padding: 13px;
-
-  border:
-    1px solid rgba(0,0,0,.08);
-
+.search-box input {
+  width: 100%;
+  height: 52px;
+  padding: 0 42px 0 15px;
+  border: 1px solid #ddd;
   border-radius: 12px;
-
-  background: #fff;
-
-  box-shadow:
-    0 18px 45px
-    rgba(0,0,0,.12);
-
-  color: #777;
-
-  font-size: 11px;
+  outline: none;
+  font-size: 13px;
 }
 
-.current-btn {
-  margin:
-    8px 0 0 42px;
+.search-box input:focus {
+  border-color: #20df4f;
+  box-shadow: 0 0 0 3px rgba(32,223,79,.1);
+}
 
-  padding: 0;
-
+.clear-button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   border: 0;
-
   background: transparent;
-
-  color: #159b36;
-
-  font-size: 11px;
-
-  font-weight: 650;
-
+  font-size: 20px;
+  color: #888;
   cursor: pointer;
 }
-
-.current-btn:disabled {
-  opacity: .5;
-}
-
-
-/* =========================================================
-   SUGGESTIONS
-========================================================= */
 
 .suggestions {
-  position: absolute;
-
-  left: 0;
-  right: 0;
-
-  top:
-    calc(100% + 6px);
-
-  z-index: 100;
-
+  margin-top: 5px;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
   overflow: hidden;
-
-  border:
-    1px solid rgba(0,0,0,.1);
-
-  border-radius: 13px;
-
-  background: #fff;
-
-  box-shadow:
-    0 18px 45px
-    rgba(0,0,0,.15);
+  box-shadow: 0 15px 30px rgba(0,0,0,.09);
+  position: relative;
+  z-index: 30;
 }
 
-.suggestion-item {
+.suggestion {
   width: 100%;
-
   display: flex;
-
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 12px;
-
+  gap: 12px;
+  padding: 13px;
   border: 0;
-
-  border-bottom:
-    1px solid #f0f1f0;
-
-  background: #fff;
-
-  color: #111;
-
+  background: white;
   text-align: left;
-
   cursor: pointer;
 }
 
-.suggestion-item:hover {
-  background: #f2f8f3;
+.suggestion:hover {
+  background: #f4f8f4;
 }
 
 .suggestion-icon {
   width: 30px;
   height: 30px;
-
-  flex:
-    0 0 30px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
+  display: grid;
+  place-items: center;
   border-radius: 50%;
-
-  background:
-    rgba(32,223,79,.1);
-
+  background: #edf7ef;
   color: #159b36;
 }
 
-.suggestion-text {
+.suggestion-content {
   min-width: 0;
-}
-
-.suggestion-text strong,
-.suggestion-text small {
-  display: block;
-
-  overflow: hidden;
-
-  white-space: nowrap;
-
-  text-overflow: ellipsis;
-}
-
-.suggestion-text strong {
-  font-size: 12px;
-}
-
-.suggestion-text small {
-  margin-top: 3px;
-
-  color: #8a928c;
-
-  font-size: 10px;
-}
-
-
-/* =========================================================
-   ROUTE
-========================================================= */
-
-.route-connector {
-  height: 23px;
-
-  margin-left: 17px;
-
-  border-left:
-    1px dashed #c9ceca;
-}
-
-
-/* =========================================================
-   MESSAGES
-========================================================= */
-
-.location-message {
-  margin-top: 14px;
-
-  padding:
-    10px 13px;
-
-  border-radius: 10px;
-
-  font-size: 11px;
-}
-
-.location-message.success {
-  background:
-    rgba(32,223,79,.08);
-
-  color: #159b36;
-}
-
-.location-message.error {
-  background:
-    rgba(255,92,92,.08);
-
-  color: #d64444;
-}
-
-
-/* =========================================================
-   RIDE DETAILS
-========================================================= */
-
-.ride-details {
-  margin-top: 22px;
-}
-
-.distance-card {
   display: flex;
-
-  align-items: center;
-
-  justify-content:
-    space-between;
-
-  padding:
-    16px 18px;
-
-  border:
-    1px solid rgba(17,17,17,.08);
-
-  border-radius: 14px;
-
-  background: #f7faf7;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.detail-label {
-  display: block;
-
-  color: #747b76;
-
-  font-size: 11px;
-
-  margin-bottom: 5px;
-}
-
-.distance-card strong {
-  font-size: 24px;
-}
-
-.distance-meta {
-  display: flex;
-
-  gap: 7px;
-
-  color: #657069;
-
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   VEHICLES
-========================================================= */
-
-.vehicle-section {
-  margin-top: 22px;
-}
-
-.section-title {
-  display: flex;
-
-  justify-content:
-    space-between;
-
-  align-items: center;
-
-  margin-bottom: 10px;
-}
-
-.section-title h3,
-.coupon-section h3 {
-  margin: 0;
-
+.suggestion-content strong {
   font-size: 13px;
 }
 
-.section-title span {
+.suggestion-content small {
+  color: #777;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loading-suggestion {
+  padding: 14px;
+  font-size: 12px;
+  color: #777;
+}
+
+.current-location,
+.map-select-button {
+  width: 100%;
+  height: 46px;
+  margin-top: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.current-location {
+  border: 1px solid #dfe7df;
+  background: #f5faf5;
+  color: #159b36;
+}
+
+.map-select-button {
+  border: 1px solid #ddd;
+  background: white;
+  color: #555;
+}
+
+.current-location:hover,
+.map-select-button:hover {
+  border-color: #20df4f;
+}
+
+.selected-preview {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f5faf5;
+  border: 1px solid #dfeee0;
+  border-radius: 12px;
+}
+
+.preview-title {
+  color: #159b36;
   font-size: 10px;
-  color: #858c87;
+  font-weight: 750;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+
+.selected-preview strong {
+  display: block;
+  font-size: 14px;
+}
+
+.selected-preview small {
+  display: block;
+  color: #777;
+  font-size: 11px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.preview-actions button {
+  flex: 1;
+  height: 38px;
+  border-radius: 8px;
+  border: 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.preview-actions button:first-child {
+  background: #20df4f;
+}
+
+.preview-actions button:last-child {
+  background: #e9ece9;
+}
+
+.route-summary {
+  margin-top: 25px;
+  padding: 17px;
+  background: #f7f8f7;
+  border-radius: 14px;
+  position: relative;
+}
+
+.route-location {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+}
+
+.route-location small {
+  display: block;
+  color: #888;
+  font-size: 10px;
+}
+
+.route-location strong {
+  display: block;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.route-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 3px;
+  border-radius: 50%;
+}
+
+.route-dot.pickup {
+  background: #20df4f;
+}
+
+.route-dot.dropoff {
+  background: #ef5350;
+}
+
+.route-line {
+  width: 1px;
+  height: 20px;
+  margin-left: 4px;
+  background: #ccc;
+}
+
+.change-route {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  border: 0;
+  background: transparent;
+  color: #159b36;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.distance-card {
+  margin-top: 14px;
+  padding: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: #111;
+  color: white;
+  border-radius: 13px;
+}
+
+.distance-card small {
+  display: block;
+  color: #aaa;
+  font-size: 10px;
+}
+
+.distance-card strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 15px;
+}
+
+.vehicle-section {
+  margin-top: 25px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.section-heading span {
+  color: #888;
+  font-size: 10px;
 }
 
 .vehicle-list {
-  display: grid;
-
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  margin-top: 10px;
 }
 
 .vehicle-card {
   width: 100%;
-
+  padding: 13px;
   display: flex;
-
   align-items: center;
-
-  justify-content:
-    space-between;
-
-  padding:
-    11px 13px;
-
-  border:
-    1px solid rgba(17,17,17,.09);
-
-  border-radius: 13px;
-
-  background: #fff;
-
-  color: #111;
-
+  justify-content: space-between;
+  border: 1px solid #e2e5e2;
+  background: white;
+  border-radius: 12px;
   cursor: pointer;
-
   text-align: left;
-
-  transition: .18s;
 }
 
 .vehicle-card:hover {
-  border-color:
-    rgba(32,160,65,.4);
-
-  transform:
-    translateY(-1px);
+  border-color: #20df4f;
 }
 
 .vehicle-card.selected {
-  border-color:
-    #20df4f;
-
-  background:
-    #f1fff3;
-
-  box-shadow:
-    0 0 0 2px
-    rgba(32,223,79,.08);
+  border-color: #20df4f;
+  background: #f5fff6;
 }
 
-.vehicle-left {
+.vehicle-main {
   display: flex;
-
+  gap: 11px;
   align-items: center;
-
-  gap: 10px;
 }
 
-.vehicle-circle {
-  width: 38px;
-  height: 38px;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 11px;
-
-  background: #eef3ef;
-
-  font-size: 18px;
+.vehicle-icon {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #f0f3f0;
 }
 
-.vehicle-info strong {
+.vehicle-main strong {
   display: block;
-
   font-size: 12px;
 }
 
-.vehicle-info span {
+.vehicle-main small {
   display: block;
-
-  margin-top: 3px;
-
-  color: #8a918c;
-
+  color: #888;
   font-size: 10px;
+  margin-top: 3px;
 }
 
-.vehicle-price {
-  font-size: 17px;
-
+.vehicle-fare {
+  font-size: 14px;
   font-weight: 750;
 }
 
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-.loading-card {
-  padding: 15px;
-
-  border-radius: 12px;
-
-  background: #f4f6f4;
-
-  color: #69716c;
-
-  font-size: 11px;
-}
-
-.error-card {
-  color: #c94343;
-
-  background: #fff2f2;
-}
-
-
-/* =========================================================
-   COUPON
-========================================================= */
-
 .coupon-section {
-  margin-top: 18px;
+  margin-top: 22px;
+}
+
+.coupon-section h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
 }
 
 .coupon-row {
   display: flex;
-
-  gap: 8px;
-
-  margin-top: 8px;
+  gap: 7px;
 }
 
 .coupon-row input {
+  min-width: 0;
   flex: 1;
-
-  height: 40px;
-
-  padding:
-    0 12px;
-
-  border:
-    1px solid rgba(17,17,17,.1);
-
+  height: 43px;
+  padding: 0 12px;
+  border: 1px solid #ddd;
   border-radius: 9px;
-
   outline: none;
-
-  background: #fff;
 }
 
 .coupon-row button {
-  padding:
-    0 16px;
-
+  width: 72px;
   border: 0;
-
   border-radius: 9px;
-
-  background: #eaf5ec;
-
-  color: #159b36;
-
-  font-weight: 700;
-
+  background: #111;
+  color: white;
   cursor: pointer;
 }
 
-.coupon-message {
-  margin:
-    6px 0 0;
-
+.coupon-section p {
   font-size: 10px;
+  margin: 7px 0;
 }
 
-.coupon-message.error {
-  color: #d64444;
+.coupon-section p.error {
+  color: #d33;
 }
 
-.coupon-message.success {
+.coupon-section p.success {
   color: #159b36;
 }
 
-
-/* =========================================================
-   FARE
-========================================================= */
-
-.fare-summary {
-  margin-top: 18px;
-
-  padding: 15px;
-
+.fare-card {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid #e4e7e4;
   border-radius: 14px;
-
-  background: #f7f9f7;
-
-  border:
-    1px solid rgba(17,17,17,.07);
 }
 
-.fare-line {
+.fare-row {
   display: flex;
-
-  justify-content:
-    space-between;
-
-  padding: 5px 0;
-
-  color: #68716b;
-
-  font-size: 11px;
+  justify-content: space-between;
+  padding: 7px 0;
+  font-size: 12px;
 }
 
-.fare-line.discount {
+.fare-row span {
+  color: #777;
+}
+
+.fare-row.discount {
   color: #159b36;
 }
 
 .fare-total {
+  margin-top: 9px;
+  padding-top: 14px;
+  border-top: 1px solid #eee;
   display: flex;
-
   align-items: center;
-
-  justify-content:
-    space-between;
-
-  margin-top: 8px;
-
-  padding-top: 12px;
-
-  border-top:
-    1px solid #dfe4df;
-}
-
-.fare-total span {
-  display: block;
-
-  font-size: 12px;
-
-  font-weight: 700;
+  justify-content: space-between;
 }
 
 .fare-total small {
   display: block;
+  font-size: 12px;
+  font-weight: 700;
+}
 
+.fare-total span {
+  display: block;
   margin-top: 3px;
-
-  color: #929992;
-
+  color: #999;
   font-size: 9px;
 }
 
-.fare-total strong {
-  font-size: 25px;
-}
-
-
-/* =========================================================
-   REQUEST
-========================================================= */
-
-.request-btn {
-  width: 100%;
-
-  height: 52px;
-
-  margin-top: 13px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content:
-    space-between;
-
-  padding:
-    0 18px;
-
-  border: 0;
-
-  border-radius: 12px;
-
-  background: #20df4f;
-
-  color: #111;
-
-  font-size: 13px;
-
-  font-weight: 800;
-
-  cursor: pointer;
-}
-
-.request-btn:hover:not(:disabled) {
-  background: #16c943;
-}
-
-.request-btn:disabled {
-  opacity: .5;
-
-  cursor: not-allowed;
-}
-
-.request-arrow {
+.fare-total > strong {
   font-size: 22px;
 }
 
-
-/* =========================================================
-   HINT
-========================================================= */
-
-.ride-hint {
-  display: flex;
-
-  gap: 14px;
-
-  align-items: center;
-
-  margin-top: 25px;
-
-  padding: 18px;
-
-  border:
-    1px dashed #ccd2cd;
-
-  border-radius: 14px;
-
-  background: #f7f9f7;
+.request-button {
+  width: 100%;
+  height: 52px;
+  margin-top: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: #20df4f;
+  color: #111;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-.hint-icon {
-  width: 38px;
-  height: 38px;
+.request-button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
 
-  display: flex;
+.request-button span {
+  float: right;
+  margin-right: 15px;
+}
 
-  align-items: center;
-  justify-content: center;
+.empty-box {
+  margin-top: 10px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f5f5f5;
+  color: #777;
+  font-size: 11px;
+}
 
-  border-radius: 11px;
+.empty-box.error {
+  color: #c33;
+}
 
-  background: #eaf7ec;
+.message {
+  margin-top: 12px;
+  padding: 11px;
+  border-radius: 9px;
+  font-size: 11px;
+}
 
+.message.success {
+  background: #edfaef;
   color: #159b36;
 }
 
-.ride-hint strong {
-  font-size: 12px;
+.message.error {
+  background: #fff0f0;
+  color: #c33;
 }
-
-.ride-hint p {
-  margin:
-    5px 0 0;
-
-  color: #7f8781;
-
-  font-size: 11px;
-
-  line-height: 1.5;
-}
-
-
-/* =========================================================
-   MAP
-========================================================= */
 
 .map-panel {
   position: relative;
-
-  min-height: 650px;
-
-  background: #dce5de;
+  min-height: 690px;
+  overflow: hidden;
 }
 
 .map {
   position: absolute;
-
   inset: 0;
 }
 
 .map-top-card {
   position: absolute;
-
-  top: 18px;
-  left: 18px;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  padding:
-    9px 12px;
-
-  border:
-    1px solid rgba(0,0,0,.08);
-
-  border-radius: 20px;
-
-  background:
-    rgba(255,255,255,.9);
-
-  box-shadow:
-    0 8px 25px
-    rgba(0,0,0,.1);
-
+  top: 16px;
+  left: 16px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 7px 20px rgba(0,0,0,.12);
   font-size: 11px;
-
-  font-weight: 700;
+  font-weight: 650;
+  z-index: 5;
 }
 
-.map-live-dot {
+.map-top-card span {
+  display: inline-block;
   width: 7px;
   height: 7px;
-
+  margin-right: 6px;
   border-radius: 50%;
-
   background: #20df4f;
-
-  box-shadow:
-    0 0 8px #20df4f;
 }
 
-.map-location-btn {
+.locate-map-button {
   position: absolute;
-
-  right: 18px;
-  top: 68px;
-
-  width: 38px;
-  height: 38px;
-
-  border:
-    1px solid rgba(0,0,0,.1);
-
-  border-radius: 10px;
-
-  background: #fff;
-
-  box-shadow:
-    0 8px 25px
-    rgba(0,0,0,.1);
-
-  cursor: pointer;
-
-  font-size: 18px;
-}
-
-.map-instruction {
-  position: absolute;
-
+  right: 16px;
   bottom: 18px;
-  left: 18px;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  padding:
-    9px 12px;
-
-  border-radius: 18px;
-
-  background:
-    rgba(255,255,255,.9);
-
-  font-size: 10px;
-
-  color: #555;
-
-  box-shadow:
-    0 8px 25px
-    rgba(0,0,0,.1);
-}
-
-.map-click-icon {
-  color: #159b36;
-}
-
-.map-selection {
-  position: absolute;
-
-  right: 18px;
-  bottom: 18px;
-
-  padding:
-    9px 12px;
-
-  border-radius: 18px;
-
-  background: #111;
-
-  color: #fff;
-
-  font-size: 10px;
-}
-
-
-/* =========================================================
-   MAP MARKERS
-========================================================= */
-
-/*
- * IMPORTANT:
- *
- * NO P
- * NO D
- *
- * Just circles.
- */
-
-.custom-marker {
-  width: 30px;
-  height: 30px;
-
+  width: 44px;
+  height: 44px;
+  border: 0;
   border-radius: 50%;
+  background: white;
+  box-shadow: 0 7px 20px rgba(0,0,0,.15);
+  cursor: pointer;
+  font-size: 20px;
+  z-index: 5;
+}
 
-  border:
-    4px solid #fff;
+.center-pin-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  z-index: 10;
+  pointer-events: none;
+}
 
-  box-shadow:
-    0 3px 12px
-    rgba(0,0,0,.35);
+.center-pin {
+  position: relative;
+  width: 42px;
+  height: 55px;
+}
 
+.pin-head {
+  position: absolute;
+  left: 7px;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: #20df4f;
+  border: 4px solid white;
+  box-shadow: 0 4px 15px rgba(0,0,0,.25);
+}
+
+.pin-shadow {
+  position: absolute;
+  bottom: 0;
+  left: 12px;
+  width: 18px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.22);
+}
+
+.map-selection-panel {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  background: rgba(255,255,255,.96);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.16);
+  z-index: 10;
+}
+
+.map-selection-panel small {
+  display: block;
+  color: #888;
+  font-size: 10px;
+}
+
+.map-selection-panel strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.map-selection-panel button {
+  flex-shrink: 0;
+  height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: #20df4f;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.ride-marker {
+  width: 42px;
+  height: 50px;
+  position: relative;
   cursor: grab;
 }
 
-.custom-marker:active {
+.ride-marker:active {
   cursor: grabbing;
 }
 
-.custom-marker.pickup {
+.ride-marker-inner {
+  width: 36px;
+  height: 36px;
+
+  position: absolute;
+  top: 0;
+  left: 3px;
+
+  border-radius: 50% 50% 50% 0;
+
+  transform:
+    rotate(-45deg);
+
+  border: 4px solid white;
+
+  box-shadow:
+    0 4px 14px
+    rgba(0, 0, 0, .3);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ride-marker.pickup
+.ride-marker-inner {
   background: #20df4f;
 }
 
-.custom-marker.dropoff {
+.ride-marker.dropoff
+.ride-marker-inner {
   background: #ff4f5f;
 }
 
+.ride-marker-label {
+  transform:
+    rotate(45deg);
 
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+  color: white;
 
-@media (max-width:1050px) {
+  font-size: 12px;
+
+  font-weight: 800;
+}
+
+@media (max-width: 1000px) {
 
   .nav-links {
     display: none;
   }
 
-  .ride-card {
-    grid-template-columns:
-      1fr;
+  .ride-layout {
+    grid-template-columns: 1fr;
   }
 
   .map-panel {
-    min-height: 500px;
+    min-height: 520px;
+    order: -1;
   }
 
   .ride-panel {
-    order: 1;
-  }
-
-  .map-panel {
-    order: 0;
+    max-height: none;
   }
 }
 
-
-@media (max-width:650px) {
+@media (max-width: 600px) {
 
   .navbar {
-    height: 72px;
-
-    padding:
-      0 20px;
+    padding: 0 20px;
   }
 
-  .logo-text {
-    font-size: 26px;
-  }
-
-  .profile-btn > span:nth-child(2) {
+  .profile-name {
     display: none;
   }
 
-  .main-content {
-    padding:
-      35px 16px 50px;
+  .page-content {
+    width: 94%;
+    padding: 25px 0;
+  }
+
+  .welcome h1 {
+    font-size: 29px;
   }
 
   .ride-panel {
     padding: 20px;
   }
 
-  .ride-card {
-    border-radius: 18px;
-  }
-
-  .location-input-row {
-    align-items: stretch;
-  }
-
-  .input-icon {
-    margin-top: 8px;
-  }
-
-  .search-btn {
-    flex-basis: 62px;
-  }
-
-  .distance-card {
-    align-items:
-      flex-start;
-
-    gap: 10px;
-  }
-
-  .distance-meta {
-    flex-direction:
-      column;
-
-    align-items:
-      flex-end;
-
-    gap: 2px;
-  }
-
   .map-panel {
-    min-height: 430px;
+    min-height: 420px;
   }
 }
 
+
 </style>
+```
