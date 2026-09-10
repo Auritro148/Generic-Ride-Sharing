@@ -1,12 +1,15 @@
-//just change the .env file as per the local dev setup
-const {Pool} = require("pg");
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
+
+
+const { Pool } = require("pg");
 const path = require("path");
-const  _env = require("dotenv"); // import dotenv to load env values to processs.env(definately not an ai generated comment)
+const env = require("dotenv"); // import dotenv to load env values to processs.env(definately not an ai generated comment)
 
 
-_env.config({
+env.config({
     path: path.join(__dirname, ".env")
-});
+});;
 
 
 const pool = new Pool({
@@ -27,7 +30,16 @@ pool.query("SELECT NOW()")
         console.error(error);
     });
 
-console.log(process.env.DB_USER)
+
+pool.query(`
+    SELECT table_schema, table_name
+    FROM information_schema.tables
+    WHERE table_name = 'users';
+`).then(result => {
+    console.log("Users table:", result.rows);
+});
+
+console.log(process.env.DB_USER);
 
 
 module.exports = pool;

@@ -1,18 +1,31 @@
-const router = require("express").Router() ;
+
+const router = require("express").Router();
 
 
-
-//necessary middleware
+// necessary middleware
 
 const auth = require("../middleware/auth");
 
 
-//NECESSARY CONTROLLERS
+// NECESSARY CONTROLLERS
+
 const userRoutes = require("../controller/userLoginController");
+
 const userProfile = require("../controller/profileViewerController");
 
-router.post("/login",userRoutes.validateLogin);
-router.get("/profile",auth.varifyToken,userProfile.profileData);
+const userRegister = require("../controller/userRegisterController");
+
+const otpVerification = require("../controller/otpVerificationController");
 
 
-module.exports = router ;
+router.post("/login", userRoutes.validateLogin);
+
+router.post("/register", userRegister.registerUser);
+
+router.post("/verify-otp", otpVerification.verifyOTP);
+
+router.get("/profile", auth.varifyToken, userProfile.profileData);
+
+
+module.exports = router;
+

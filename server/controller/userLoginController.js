@@ -3,6 +3,12 @@ const pool = require("../config/dbConfig");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const env = require('dotenv');
+const path = require("path");
+
+env.config({
+    path: path.join(__dirname, "../.env")
+});
 
 
 
@@ -13,7 +19,7 @@ async function validateLogin(req, res) {
 
         // any code below this line must be moved to a helper function
         const query_val = {
-            text: 'SELECT EMAIL ,HASH_KEY FROM PUBLIC.USERS WHERE EMAIL = $1',
+            text:  "SELECT email, hash_key FROM users WHERE email = $1",
             values: [email],
         }
 
@@ -23,11 +29,12 @@ async function validateLogin(req, res) {
 
         // the promise is resolved
 
-        if (user.rowCount == 0) {
+        if (user.rowCount == 0 ) {
             return res.status(401).json({
                 message: "invalid credentials"
             })
         }
+        
 
     
 
