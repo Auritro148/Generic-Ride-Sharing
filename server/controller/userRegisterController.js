@@ -24,9 +24,9 @@ async function registerUser(req, res) {
         } = req.body;
 
 
-        // -----------------------------------
-        // 1. Validate input
-        // -----------------------------------
+        
+        //  Validate input
+        
 
         if (
             !first_name ||
@@ -42,16 +42,16 @@ async function registerUser(req, res) {
         }
 
 
-        // -----------------------------------
+        
         // 2. Normalize email
-        // -----------------------------------
+        
 
         email = rawEmail.trim().toLowerCase();
 
 
-        // -----------------------------------
-        // 3. Check whether user already exists
-        // -----------------------------------
+        
+        // Check whether user already exists
+        
 
         const existingUser = await userModel.findByEmail(email);
 
@@ -65,16 +65,16 @@ async function registerUser(req, res) {
         }
 
 
-        // -----------------------------------
-        // 4. Hash password
-        // -----------------------------------
+        
+        //  Hash password
+        
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
 
-        // -----------------------------------
-        // 5. Create user
-        // -----------------------------------
+        
+        //  Create user
+        
 
         const userData = {
             first_name: first_name.trim(),
@@ -89,16 +89,16 @@ async function registerUser(req, res) {
         const user = await userModel.createUser(userData);
 
 
-        // -----------------------------------
+        
         // 6. Generate OTP
-        // -----------------------------------
+        
 
         const code = otpService.generateOTP();
 
 
-        // -----------------------------------
+        
         // 7. Hash OTP
-        // -----------------------------------
+        
 
         const hashedOTP = await bcrypt.hash(
             code.toString(),
@@ -106,9 +106,9 @@ async function registerUser(req, res) {
         );
 
 
-        // -----------------------------------
-        // 8. Store hashed OTP
-        // -----------------------------------
+        
+        //  Store hashed OTP
+        
 
         await userModel.saveOTP(
             email,
@@ -116,9 +116,9 @@ async function registerUser(req, res) {
         );
 
 
-        // -----------------------------------
+        
         // 9. Send OTP email
-        // -----------------------------------
+        
 
         await sendEmail(
             email,
@@ -127,9 +127,9 @@ async function registerUser(req, res) {
         );
 
 
-        // -----------------------------------
-        // 10. Registration response
-        // -----------------------------------
+        
+        //  Registration response as json
+        
 
         return res.status(201).json({
 
@@ -157,9 +157,9 @@ async function registerUser(req, res) {
         console.error("Registration error:", error);
 
 
-        // -----------------------------------
-        // 11. Clean up failed registration
-        // -----------------------------------
+        
+        //  failed registration processing
+        
 
         if (email) {
 
@@ -177,9 +177,9 @@ async function registerUser(req, res) {
         }
 
 
-        // -----------------------------------
-        // 12. Handle duplicate email race
-        // -----------------------------------
+        
+        // email duplication handling . error is there . need to be fixed
+        
 
         if (error.code === "23505") {
 
@@ -191,9 +191,9 @@ async function registerUser(req, res) {
         }
 
 
-        // -----------------------------------
-        // 13. Generic server error
-        // -----------------------------------
+        
+        //  server gone boom
+        
 
         return res.status(500).json({
             message: "Registration failed",

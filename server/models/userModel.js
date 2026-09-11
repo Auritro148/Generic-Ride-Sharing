@@ -4,7 +4,7 @@
  *
  * Database interface for user registration.
  *
- * The controller should only interact with these functions.
+ * core interface for the backend to interact with database
  * Database queries should be implemented inside these functions.
  */
 
@@ -12,9 +12,9 @@ const { randomUUID } = require("crypto");
 const pool = require("../config/dbConfig");
 
 
-// ---------------------------------------------
+
 // Find user by email
-// ---------------------------------------------
+
 //
 // Used before registration to determine whether
 // an account with the given email already exists.
@@ -40,9 +40,9 @@ async function findByEmail(email) {
 }
 
 
-// ---------------------------------------------
+
 // Create user
-// ---------------------------------------------
+
 //
 // Creates a new user in the database.
 //
@@ -103,9 +103,9 @@ async function createUser(userData) {
 }
 
 
-// ---------------------------------------------
+
 // Save OTP
-// ---------------------------------------------
+
 //
 // Stores the OTP generated during registration.
 //
@@ -139,9 +139,9 @@ async function saveOTP(email, code) {
     await pool.query(query, [email, code]);
 }
 
-// ---------------------------------------------
+
 // Find OTP
-// ---------------------------------------------
+
 //
 // Retrieves the OTP record for an email.
 //
@@ -165,9 +165,9 @@ async function findOTP(email) {
     return result.rows[0];
 }
 
-// ---------------------------------------------
+
 // Mark OTP as used
-// ---------------------------------------------
+
 //
 // Marks the OTP as used after successful verification.
 //
@@ -186,9 +186,9 @@ async function markOTPUsed(email) {
 }
 
 
-// ---------------------------------------------
+
 // Verify user
-// ---------------------------------------------
+
 //
 // Marks the user's email as verified.
 //
@@ -215,9 +215,9 @@ async function verifyUser(email) {
     return result.rows[0];
 }
 
-// ---------------------------------------------
+
 // Delete pending registration
-// ---------------------------------------------
+
 //
 // Removes the user and OTP if registration fails
 // before email verification is completed.
@@ -261,9 +261,9 @@ async function deletePendingRegistration(email) {
 }
 
 
-// ---------------------------------------------
-// Module exports
-// ---------------------------------------------
+
+// Modules
+
 module.exports = {
     findByEmail,
     createUser,
