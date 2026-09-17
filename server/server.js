@@ -1,5 +1,6 @@
 const express = require("express");
 const userRoute = require("./routes/userRoutes");
+const vehicleType = require("./routes/vehicleRoutes");
 const pool = require("./config/dbConfig");
 const cors = require("cors");
 
@@ -16,6 +17,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use("/core/user", userRoute);
+app.use("/core/vehicles",vehicleType);
 
 
 
