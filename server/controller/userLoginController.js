@@ -14,7 +14,6 @@ env.config({
 
 
 async function validateLogin(req, res) {
-
     try {
         const { email, password } = req.body;
 
@@ -37,6 +36,7 @@ async function validateLogin(req, res) {
         }
         
 
+    
 
         const isMatch = await bcrypt.compare(password, user.rows[0].hash_key);
 

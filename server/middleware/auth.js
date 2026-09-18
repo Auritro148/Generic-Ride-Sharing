@@ -17,6 +17,8 @@ function varifyToken(req, res, next) {
         const decoded = jwt.verify(Token, process.env.JWT_SECRET_KEY)
         req.user = decoded;
         console.log(req.user);
+        req.user = decoded
+
         next();
     } catch (err) {
         if (err.name === 'TokenExpiredError') {
