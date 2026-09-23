@@ -64,7 +64,7 @@ async function findVehicleType(vehicleType) {
             model_name,
             capacity
         FROM public.vehicle_types
-        WHERE LOWER(model_name) = LOWER($1)
+        WHERE LOWER(type) = LOWER($1)
     `;
 
     const result = await pool.query(query, [vehicleType]);

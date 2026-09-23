@@ -16,7 +16,7 @@ const fareCalculation = require("../controller/fareController");
 //ride processing routes
 
 router.post("/request", auth.varifyToken, rideRequest.createRideRequest);
-router.post("/fare", auth.verifyToken, fareCalculation.fareCalculation)
+router.post("/fare", auth.varifyToken, fareCalculation.fareCalculation)
 
 
 

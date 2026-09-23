@@ -1,6 +1,6 @@
-const {
+const{
     calculateAllFares
-} = require("../services/fareCalculator.js");
+}= require("../services/fareCalculator.js");
 
 
 async function fareCalculation(req, res) {

@@ -15,7 +15,7 @@ const VEHICLE_RATES = {
         perKm: 18
     },
 
-    CAR: {
+    CARX: {
         baseFare: 100,
         perKm: 25
     }
