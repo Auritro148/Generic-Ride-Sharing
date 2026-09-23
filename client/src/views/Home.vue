@@ -2928,11 +2928,26 @@ const requestRide = async () => {
     }
 
 
-    showMessage(
-      data.message ||
-      'Ride requested successfully.',
-      'success'
-    )
+    const rideId =
+  data.rideId ||
+  data.ride?.rideId ||
+  data.ride?.ride_id ||
+  data.data?.rideId
+
+if (!rideId) {
+
+  throw new Error(
+    'Ride was created but ride ID was not returned.'
+  )
+
+}
+
+router.push({
+  name: 'ride-searching',
+  params: {
+    rideId
+  }
+})
 
   } catch (error) {
 
