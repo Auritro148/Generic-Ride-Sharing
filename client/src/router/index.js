@@ -5,6 +5,8 @@ import SignIn from '../views/SignIn.vue'
 import SignUp from '../views/SignUp.vue'
 import Home from '../views/Home.vue'
 import RideRequest from "../views/RideRequest.vue";
+import rideSearching from '../views/RideSearching.vue';
+import rideAccepted from '../views/RideAccepted.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -47,6 +49,20 @@ const router = createRouter({
       name: "Profile",
       component: AuthCard,
       meta: {requiresAuth: true }
+    },
+
+    {
+      path: '/ride-searching/:rideId',
+      name: 'ride-searching',
+      component: rideSearching,
+      meta: {requiresAuth: true }
+    },
+
+    {
+      path: '/ride-accepted/:rideId',
+      name: 'ride-accepted',
+      component: rideAccepted
+
     }
   ]
 })

@@ -167,13 +167,11 @@ async function createRideRequest(req, res) {
         // -----------------------------------------
 
         return res.status(201).json({
-
             message: "Ride request created successfully",
-
+            rideId: result.request.req_id,
+            status: result.request.status,
             request: result.request,
-
             location: result.location
-
         });
 
 
