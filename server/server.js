@@ -2,6 +2,7 @@ const express = require("express");
 const userRoute = require("./routes/userRoutes");
 const vehicleType = require("./routes/vehicleRoutes");
 const rideRoute = require("./routes/rideRoute");
+const driverRoute = require("./routes/driverRoute");
 const pool = require("./config/dbConfig");
 const cors = require("cors");
 
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use("/core/user", userRoute);
 app.use("/core/vehicles",vehicleType);
 app.use("/core/rides",rideRoute);
+app.use("/core/driver",driverRoute);
 
 
 
