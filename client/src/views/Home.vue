@@ -3405,6 +3405,7 @@ const setMarker = (
 
 .home-page {
   min-height: 100vh;
+  min-width: 100vw;
   background:
     linear-gradient(
       135deg,
@@ -3525,9 +3526,9 @@ const setMarker = (
 }
 
 .page-content {
-  width: min(1380px, 92%);
+  width: min(1600px, calc(100% - 48px));
   margin: 0 auto;
-  padding: 45px 0;
+  padding: 40px 0;
 }
 
 .welcome {
@@ -3560,18 +3561,22 @@ const setMarker = (
 
 .ride-layout {
   display: grid;
-  grid-template-columns: 440px 1fr;
-  min-height: 690px;
+  grid-template-columns: 380px minmax(0, 1fr);
+  width: 100%;
+  min-height: 100vh;
   border-radius: 22px;
   overflow: hidden;
   background: white;
   box-shadow: 0 18px 55px rgba(0,0,0,.09);
 }
 
+
 .ride-panel {
+  width: 100%;
+  min-width: 0;
   padding: 28px;
   overflow-y: auto;
-  max-height: 690px;
+  max-height: 100vh;
 }
 
 .panel-title {
@@ -4120,13 +4125,17 @@ const setMarker = (
 
 .map-panel {
   position: relative;
-  min-height: 690px;
+  width: 100%;
+  min-width: 90%;
+  min-height: 100vh;
   overflow: hidden;
 }
 
 .map {
-  position: absolute;
+  position: relative;
   inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .map-top-card {
