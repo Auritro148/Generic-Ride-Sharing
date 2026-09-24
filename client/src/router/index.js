@@ -7,6 +7,7 @@ import Home from '../views/Home.vue'
 import RideRequest from "../views/RideRequest.vue";
 import rideSearching from '../views/RideSearching.vue';
 import rideAccepted from '../views/RideAccepted.vue';
+import driver from '../views/driver.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -63,6 +64,12 @@ const router = createRouter({
       name: 'ride-accepted',
       component: rideAccepted
 
+    },
+
+    {
+      path: '/driver',
+      name: 'driverview',
+      component: driver
     }
   ]
 })
