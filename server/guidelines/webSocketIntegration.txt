@@ -1,0 +1,778 @@
+Below is a frontend-team handoff document based exactly on the WebSocket implementation we established. It is written so the frontend team can integrate it without needing to understand the backend internals.
+
+Driver WebSocket Integration Guide
+1. Purpose
+
+The driver application uses a WebSocket connection to maintain a real-time connection with the backend while the driver is online.
+
+The WebSocket will later be used for things such as:
+
+notifying the driver about ride requests
+notifying the driver when a ride is accepted by another driver
+receiving real-time server events
+sending/receiving driver location updates
+
+For the current implementation, the WebSocket's primary responsibility is:
+
+Maintain a live connection between an authenticated driver and the backend.
+
+2. Important: HTTP and WebSocket are two separate connections
+
+Do not treat the WebSocket as a replacement for the existing /set-status API.
+
+The driver uses both:
+
+HTTP
+│
+├── Set driver online/offline
+└── Send normal API requests
+
+WebSocket
+│
+└── Maintain real-time driver connection
+
+The flow is:
+
+Driver
+   │
+   │ 1. POST /core/driver/set-status
+   │
+   ▼
+Backend
+   │
+   │ is_online = true
+   │
+   ▼
+HTTP 200
+   │
+   │ 2. Open WebSocket
+   ▼
+WebSocket Server
+3. Authentication
+
+The driver already receives a JWT during login.
+
+The frontend must store/use the JWT exactly as it currently does for authenticated API requests.
+
+For HTTP requests:
+
+Authorization: Bearer <JWT>
+
+For the WebSocket:
+
+ws://localhost:5000/core/driver/ws?token=<JWT>
+Do not send driver_id
+
+The frontend must not do this:
+
+new WebSocket(
+    `ws://localhost:5000/core/driver/ws?driver_id=${driverId}`
+);
+
+The backend obtains driver_id from the verified JWT.
+
+The frontend only supplies:
+
+JWT
+4. Going online
+
+When the driver presses the Go Online button, the frontend should first call:
+
+POST /core/driver/set-status
+
+with:
+
+Authorization: Bearer <JWT>
+Content-Type: application/json
+
+Body:
+
+{
+    "mode": "online",
+    "lat": 23.7806,
+    "long": 90.4070
+}
+Important
+
+lat and long must be JavaScript numbers, not strings.
+
+Correct:
+
+{
+    mode: "online",
+    lat: 23.7806,
+    long: 90.4070
+}
+
+Avoid:
+
+{
+    mode: "online",
+    lat: "23.7806",
+    long: "90.4070"
+}
+5. Only open WebSocket after successful online response
+
+The frontend should not open the WebSocket before the /set-status request succeeds.
+
+Recommended sequence:
+
+await setDriverOnline();
+
+connectDriverWebSocket();
+
+Conceptually:
+
+Go Online button
+       │
+       ▼
+POST /set-status
+       │
+       ├── Failed → remain offline
+       │
+       └── Success
+             │
+             ▼
+       Open WebSocket
+
+A successful response looks like:
+
+{
+    "success": true,
+    "message": "Driver is now online",
+    "driver": {
+        "driver_id": "...",
+        "is_online": true
+    }
+}
+
+Only after:
+
+response.success === true
+
+should the frontend establish the WebSocket.
+
+6. Creating the WebSocket connection
+
+Assuming:
+
+const jwt = /* driver's existing JWT */;
+
+create:
+
+const socket = new WebSocket(
+    `ws://localhost:5000/core/driver/ws?token=${encodeURIComponent(jwt)}`
+);
+Production
+
+When your frontend/backend are deployed with HTTPS, use:
+
+wss://
+
+instead of:
+
+ws://
+
+For example:
+
+wss://your-server-domain/core/driver/ws?token=...
+
+Do not hard-code the backend URL in multiple places.
+
+Use your existing environment/configuration system.
+
+7. WebSocket event handlers
+
+The frontend should attach at least these handlers:
+
+socket.onopen = () => {
+    console.log("Driver WebSocket connected");
+};
+
+socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    console.log("WebSocket message:", data);
+};
+
+socket.onclose = (event) => {
+    console.log("Driver WebSocket disconnected");
+};
+
+socket.onerror = (error) => {
+    console.error("Driver WebSocket error:", error);
+};
+8. onopen
+
+When this fires:
+
+socket.onopen
+
+the WebSocket connection has successfully been established.
+
+The backend will send:
+
+{
+    "type": "connection_established",
+    "message": "Driver WebSocket connected",
+    "driver_id": "..."
+}
+
+The frontend can therefore do:
+
+socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "connection_established") {
+        console.log("WebSocket ready");
+    }
+};
+Do not use the received driver_id as the source of authentication
+
+It is informational.
+
+The backend already authenticated the driver using the JWT.
+
+9. onmessage
+
+All future real-time functionality will come through:
+
+socket.onmessage
+
+Therefore, do not write separate onmessage handlers in different components.
+
+Instead, create one WebSocket service/manager.
+
+For example:
+
+src/
+├── services/
+│   └── driverWebSocket.js
+│
+├── components/
+│   ├── DriverStatus.vue
+│   └── RideRequests.vue
+│
+└── ...
+
+The WebSocket service receives messages and can distribute them to the relevant frontend state/store.
+
+This becomes especially important when we add ride-request broadcasting.
+
+10. Current server messages
+
+At the moment, the backend sends:
+
+{
+    "type": "connection_established",
+    "message": "Driver WebSocket connected",
+    "driver_id": "..."
+}
+
+The frontend should handle this message but doesn't need to do anything complicated with it.
+
+Example:
+
+if (data.type === "connection_established") {
+    console.log("Driver real-time connection established");
+}
+
+Future messages will use the same type pattern.
+
+For example, later we may have:
+
+{
+    "type": "ride_request",
+    "ride": {}
+}
+
+or:
+
+{
+    "type": "ride_accepted",
+    "req_id": 123
+}
+
+The exact future message structures will be provided separately.
+
+11. Going offline
+
+When the driver presses Go Offline, the frontend must call:
+
+POST /core/driver/set-status
+
+Body:
+
+{
+    "mode": "offline"
+}
+
+with the same:
+
+Authorization: Bearer <JWT>
+Recommended sequence
+Go Offline
+    │
+    ▼
+POST /set-status
+    │
+    ▼
+Backend sets is_online = false
+    │
+    ▼
+Backend closes WebSocket
+    │
+    ▼
+Frontend receives onclose
+
+The frontend does not need to manually close the socket first.
+
+Let the server close it.
+
+12. Don't reconnect when the driver intentionally goes offline
+
+This is very important.
+
+The frontend will eventually have automatic reconnection logic.
+
+However:
+
+Driver intentionally offline
+        ↓
+WebSocket closes
+        ↓
+DO NOT reconnect
+
+Otherwise you could get:
+
+Go Offline
+   ↓
+socket closes
+   ↓
+frontend reconnects
+   ↓
+driver becomes connected again
+
+So maintain a frontend state such as:
+
+let shouldReconnect = true;
+
+When the driver chooses offline:
+
+shouldReconnect = false;
+
+Then:
+
+socket.onclose = () => {
+    if (shouldReconnect) {
+        // reconnect
+    }
+};
+13. Unexpected disconnection
+
+This is different.
+
+Suppose the driver is online:
+
+Driver Online
+     │
+     ▼
+WebSocket connected
+     │
+     ▼
+Internet disappears
+     │
+     ▼
+WebSocket disconnects
+
+The frontend should attempt to reconnect.
+
+Remember that the backend gives the driver a 30-second grace period before automatically setting:
+
+is_online = false
+
+Therefore the frontend should attempt reconnection during that period.
+
+14. Recommended reconnection strategy
+
+Do not reconnect continuously with:
+
+setInterval(() => {
+    new WebSocket(...);
+}, 100);
+
+That can create many simultaneous connections.
+
+Instead use increasing delays.
+
+For example:
+
+1st attempt → 1 second
+2nd attempt → 2 seconds
+3rd attempt → 4 seconds
+4th attempt → 8 seconds
+...
+
+And cap the delay.
+
+For a college project, something like:
+
+1s → 2s → 4s → 8s → 10s
+
+is sufficient.
+
+15. Very important: avoid duplicate sockets
+
+The frontend should maintain one WebSocket per driver session.
+
+Do not let multiple Vue/React components independently execute:
+
+new WebSocket(...)
+
+For example, avoid:
+
+DriverDashboard → WebSocket
+RideRequestPage  → WebSocket
+DriverMap        → WebSocket
+
+That could create:
+
+Driver
+ ├── Socket 1
+ ├── Socket 2
+ └── Socket 3
+
+The backend intentionally supports one active socket per driver, so the frontend should also maintain one.
+
+Use a central service:
+
+driverWebSocket.js
+        │
+        ├── connect()
+        ├── disconnect()
+        ├── send()
+        └── message handling
+
+Then components communicate with that service/store.
+
+16. Recommended frontend state
+
+The frontend should maintain at least:
+
+{
+    driverStatus: "offline",
+    websocketStatus: "disconnected"
+}
+
+Possible WebSocket states:
+
+disconnected
+connecting
+connected
+reconnecting
+
+Possible driver states:
+
+offline
+online
+
+Don't confuse these two.
+
+For example:
+
+driverStatus = online
+websocketStatus = reconnecting
+
+means:
+
+The driver has chosen to be online, but the real-time connection is currently being re-established.
+
+That's different from:
+
+driverStatus = offline
+websocketStatus = disconnected
+17. Suggested UI behavior
+
+The UI can represent the states like this:
+
+                    Driver Status
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+            Offline                Online
+              │                     │
+         WS disconnected       ┌────┴─────┐
+                               │          │
+                            Connected  Reconnecting
+
+For example:
+
+Offline
+● Offline
+
+[ Go Online ]
+Online + connected
+● Online
+
+Real-time connection: Connected
+
+[ Go Offline ]
+Online + reconnecting
+● Online
+
+Reconnecting...
+
+[ Go Offline ]
+
+The frontend should not automatically change the driver's intentional status to offline merely because the WebSocket temporarily disconnects.
+
+The backend handles the grace period.
+
+18. Browser tab/component lifecycle
+
+Do not close the WebSocket simply because a particular UI component unmounts.
+
+For example:
+
+DriverDashboard
+    │
+    ├── Map component
+    ├── Ride request component
+    └── Status component
+
+If Map disappears, that should not close the driver's WebSocket.
+
+The socket belongs to the driver session, not an individual component.
+
+Close it when:
+
+Driver explicitly goes offline, or
+Driver logs out, or
+The application intentionally terminates the driver's session.
+19. Logout
+
+When the driver logs out:
+
+Logout
+  │
+  ├── stop WebSocket reconnection
+  ├── close WebSocket
+  └── clear JWT/session
+
+Important:
+
+shouldReconnect = false;
+socket.close();
+
+Otherwise the reconnect mechanism could reconnect using a session that the user has already logged out from.
+
+20. Location
+
+For the initial online request, send:
+
+{
+    "mode": "online",
+    "lat": 23.7806,
+    "long": 90.4070
+}
+
+The backend stores this in:
+
+active_driver_location
+Don't send location through the WebSocket yet
+
+The current WebSocket implementation is not the agreed location-update protocol.
+
+Do not invent a message such as:
+
+{
+    "type": "location",
+    "lat": 23.7806,
+    "long": 90.407
+}
+
+until the backend team provides the location-update API/protocol.
+
+This is important because your ride-matching system will eventually need a defined policy for:
+
+update frequency
+location accuracy
+stale locations
+driver disconnects
+GPS permissions
+server-side location storage
+
+We'll define that separately.
+
+21. Do not implement WebSocket heartbeat manually unless instructed
+
+The backend already uses WebSocket ping/pong.
+
+The frontend does not need to create its own:
+
+setInterval(() => {
+    socket.send("ping");
+}, 1000);
+
+for connection health.
+
+The backend handles WebSocket-level heartbeat.
+
+The frontend should simply respond to normal WebSocket events and reconnect when necessary.
+
+22. Recommended service interface
+
+I recommend the frontend team expose something conceptually like:
+
+driverWebSocket.connect(jwt);
+driverWebSocket.disconnect();
+
+driverWebSocket.isConnected();
+
+driverWebSocket.onMessage(callback);
+
+The rest of the application should not need to know:
+
+ws://localhost:5000/core/driver/ws
+
+or how JWT authentication works internally.
+
+That keeps the architecture:
+
+Vue/React Components
+        │
+        ▼
+driverWebSocket service
+        │
+        ▼
+WebSocket
+        │
+        ▼
+Backend
+23. Complete driver lifecycle
+
+The frontend implementation should ultimately behave like this:
+
+                     LOGIN
+                       │
+                       ▼
+                  Store JWT
+                       │
+                       ▼
+                 Driver Offline
+                       │
+                 [Go Online]
+                       │
+                       ▼
+             POST /set-status
+              mode = online
+              lat / long
+                       │
+                       ▼
+                  HTTP 200
+                       │
+                       ▼
+               WebSocket.connect()
+                       │
+                       │ JWT
+                       ▼
+              WebSocket Connected
+                       │
+                       ▼
+                Driver ONLINE
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+    Connection OK             Connection lost
+          │                         │
+          │                         ▼
+          │                    Reconnect
+          │                         │
+          │                  ┌──────┴──────┐
+          │                  │             │
+          │              Connected      Timeout
+          │                  │             │
+          │                  │             ▼
+          │                  │       Backend offline
+          │                  │
+          └──────────────────┘
+                       │
+                 [Go Offline]
+                       │
+                       ▼
+              POST /set-status
+               mode = offline
+                       │
+                       ▼
+              Backend closes WS
+                       │
+                       ▼
+                Stop reconnect
+                       │
+                       ▼
+                    OFFLINE
+24. Frontend implementation checklist
+
+Give this checklist directly to the frontend team:
+
+Authentication
+ Use the existing driver's JWT.
+ Do not send driver_id separately for WebSocket authentication.
+ Use encodeURIComponent(jwt) when putting the JWT in the WebSocket URL.
+ Clear the JWT on logout.
+Going online
+ Get the driver's current GPS coordinates.
+ Call POST /core/driver/set-status.
+ Send mode: "online".
+ Send numeric lat and long.
+ Wait for successful HTTP response.
+ Then open the WebSocket.
+ Use the same JWT.
+WebSocket
+ Maintain only one socket.
+ Handle onopen.
+ Handle onmessage.
+ Handle onclose.
+ Handle onerror.
+ Handle connection_established.
+ Do not manually implement heartbeat.
+ Do not send arbitrary driver IDs.
+Reconnection
+ Reconnect after unexpected disconnection.
+ Use increasing retry delays.
+ Do not create multiple simultaneous sockets.
+ Stop retrying when the driver intentionally goes offline.
+ Stop retrying after logout.
+Going offline
+ Call /core/driver/set-status.
+ Send { "mode": "offline" }.
+ Let the backend close the WebSocket.
+ Stop reconnection attempts.
+Architecture
+ Keep WebSocket logic in one service.
+ Do not create sockets inside individual UI components.
+ Keep WebSocket state separate from driver online/offline state.
+ Do not implement location messages until the backend protocol is finalized.
+Backend contract the frontend team should use
+Operation	Method	Endpoint	Authentication
+Go online	POST	/core/driver/set-status	Bearer JWT
+Go offline	POST	/core/driver/set-status	Bearer JWT
+Real-time connection	WebSocket	/core/driver/ws?token=JWT	Same JWT
+Online request
+{
+    "mode": "online",
+    "lat": 23.7806,
+    "long": 90.4070
+}
+Offline request
+{
+    "mode": "offline"
+}
+Initial WebSocket message
+{
+    "type": "connection_established",
+    "message": "Driver WebSocket connected",
+    "driver_id": "..."
+}
+
+For the frontend team, the key rule is: HTTP /set-status controls the driver's intended status; WebSocket maintains the real-time connection. This separation will make the upcoming ride-request broadcasting and driver-location features much easier to add.

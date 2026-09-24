@@ -7,11 +7,15 @@ async function setDriverStatus(driverId, mode, lat = null, long = null) {
 
     if (mode === "online") {
         if (lat === null || long === null) {
-            throw new Error("Latitude and longitude are required when going online");
+            throw new Error(
+                "Latitude and longitude are required when going online"
+            );
         }
 
         if (typeof lat !== "number" || typeof long !== "number") {
-            throw new Error("Latitude and longitude must be numbers");
+            throw new Error(
+                "Latitude and longitude must be numbers"
+            );
         }
 
         if (lat < -90 || lat > 90) {
@@ -67,6 +71,27 @@ async function setDriverStatus(driverId, mode, lat = null, long = null) {
     }
 }
 
+
+async function setDriverOffline(driverId) {
+    const result = await pool.query(
+        `
+        UPDATE drivers
+        SET is_online = false
+        WHERE driver_id = $1
+        RETURNING driver_id, is_online
+        `,
+        [driverId]
+    );
+
+    if (result.rows.length === 0) {
+        return false;
+    }
+
+    return result.rows[0];
+}
+
+
 module.exports = {
-    setDriverStatus
+    setDriverStatus,
+    setDriverOffline
 };
