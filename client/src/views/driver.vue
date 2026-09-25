@@ -232,50 +232,185 @@ async function goOnline() {
 //   };
 // }
 
+
 function connectWebSocket(token) {
-    console.log("Starting WebSocket connection...");
-    console.log("Token exists:", !!token);
 
-    const wsUrl =
-        `ws://localhost:5000/core/driver/ws?token=${encodeURIComponent(token)}`;
+  console.log("Starting WebSocket connection...");
+  console.log("Token exists:", !!token);
 
-    console.log("WebSocket URL:", wsUrl);
 
-    socket = new WebSocket(wsUrl);
+  const wsUrl =
+    `ws://localhost:5000/core/driver/ws?token=${encodeURIComponent(token)}`;
 
-    socket.onopen = () => {
-        console.log("WEBSOCKET CONNECTED");
-        socketStatus.value = "Connected";
-    };
 
-    socket.onmessage = (event) => {
-        console.log("WEBSOCKET MESSAGE:", event.data);
+  console.log("WebSocket URL:", wsUrl);
 
-        try {
-            const data = JSON.parse(event.data);
-            console.log("Parsed message:", data);
-        } catch (error) {
-            console.error("Message parse error:", error);
-        }
-    };
 
-    socket.onerror = (error) => {
-        console.error("WEBSOCKET ERROR:", error);
-        socketStatus.value = "Error";
-    };
+  socket = new WebSocket(wsUrl);
 
-    socket.onclose = (event) => {
+
+  // -----------------------------------------
+  // WebSocket connected
+  // -----------------------------------------
+
+  socket.onopen = () => {
+
+    console.log("WEBSOCKET CONNECTED");
+
+    socketStatus.value = "Connected";
+  };
+
+
+  // -----------------------------------------
+  // Message received from backend
+  // -----------------------------------------
+
+  socket.onmessage = (event) => {
+
+    console.log(
+      "WEBSOCKET MESSAGE RECEIVED:",
+      event.data
+    );
+
+
+    try {
+
+      const data =
+        JSON.parse(event.data);
+
+
+      console.log(
+        "PARSED WEBSOCKET EVENT:",
+        data
+      );
+
+
+      // -----------------------------------------
+      // Connection established event
+      // -----------------------------------------
+
+      if (
+        data.type ===
+        "connection_established"
+      ) {
+
         console.log(
-            "WEBSOCKET CLOSED",
-            "code:",
-            event.code,
-            "reason:",
-            event.reason
+          "Driver WebSocket connection established:",
+          data
         );
 
-        socketStatus.value = "Disconnected";
-    };
+        socketStatus.value =
+          "Connected";
+
+        message.value =
+          "Driver WebSocket connected";
+      }
+
+
+      // -----------------------------------------
+      // Ride request event
+      // -----------------------------------------
+
+      if (
+        data.type ===
+        "ride_request"
+      ) {
+
+        console.log(
+          "================================"
+        );
+
+        console.log(
+          "NEW RIDE REQUEST RECEIVED"
+        );
+
+        console.log(
+          "Request ID:",
+          data.data.req_id
+        );
+
+        console.log(
+          "Distance:",
+          data.data.distance_meters,
+          "meters"
+        );
+
+        console.log(
+          "Complete ride request event:",
+          data
+        );
+
+        console.log(
+          "================================"
+        );
+      }
+
+
+      // -----------------------------------------
+      // Pong event
+      // -----------------------------------------
+
+      if (
+        data.type ===
+        "pong"
+      ) {
+
+        console.log(
+          "Pong received"
+        );
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "Message parse error:",
+        error
+      );
+
+    }
+
+  };
+
+
+  // -----------------------------------------
+  // WebSocket error
+  // -----------------------------------------
+
+  socket.onerror = (error) => {
+
+    console.error(
+      "WEBSOCKET ERROR:",
+      error
+    );
+
+    socketStatus.value =
+      "Error";
+  };
+
+
+  // -----------------------------------------
+  // WebSocket closed
+  // -----------------------------------------
+
+  socket.onclose = (event) => {
+
+    console.log(
+      "WEBSOCKET CLOSED",
+      "code:",
+      event.code,
+      "reason:",
+      event.reason
+    );
+
+    socketStatus.value =
+      "Disconnected";
+
+  };
+
 }
+
+
 
 
 async function goOffline() {
