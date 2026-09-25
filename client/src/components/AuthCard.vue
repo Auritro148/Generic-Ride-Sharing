@@ -115,7 +115,7 @@ const handleSignIn = () => {
 }
 
 const handleSignUp = () => {
-  router.push('/signup')
+  router.push('/driversignin')
 }
 </script>
 

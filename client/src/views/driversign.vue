@@ -191,7 +191,7 @@ const handleLogin = async () => {
 
     successMessage.value = 'Sign in successful!'
 
-    router.push('/home')
+    router.push('/driver')
 
   } catch (error) {
     console.error('Sign in error:', error)
