@@ -9,8 +9,9 @@ const {
 
 const setStatusController = async (req, res) => {
     try {
-        //const driverId = req.user.driver_id;
-        const driverId = "850fc4f4-5e5a-48c3-bae8-36df65778f35"
+        const driverId = req.user.driver_id;
+        console.log("Driver ID from JWT:", driverId);
+       
 
         const {
             mode,
