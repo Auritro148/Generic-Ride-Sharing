@@ -59,7 +59,7 @@
 import { ref } from "vue";
 
 const API_BASE_URL = "http://localhost:5000";
-const WS_URL = "ws://localhost:5000";
+const WS_URL = "ws://localhost:5000/core/driver/ws";
 
 const isOnline = ref(false);
 const loading = ref(false);
@@ -168,68 +168,113 @@ async function goOnline() {
 }
 
 
+// function connectWebSocket(token) {
+//   if (socket) {
+//     socket.close();
+//     socket = null;
+//   }
+
+
+//   socketStatus.value = "Connecting...";
+
+
+//   socket = new WebSocket(
+//     `${WS_URL}?token=${encodeURIComponent(token)}`
+//   );
+
+
+//   socket.onopen = () => {
+//     socketStatus.value = "Connected";
+//   };
+
+
+//   socket.onmessage = (event) => {
+//     try {
+//       const data = JSON.parse(event.data);
+
+//       console.log("WebSocket message:", data);
+
+//       if (data.type === "connection_established") {
+//         socketStatus.value = "Connected";
+//         message.value = "Driver WebSocket connected";
+//       }
+
+//       if (data.type === "pong") {
+//         console.log("Pong received");
+//       }
+
+//     } catch (error) {
+//       console.error(
+//         "Invalid WebSocket message:",
+//         error
+//       );
+//     }
+//   };
+
+
+//   socket.onclose = (event) => {
+//     console.log(
+//       "WebSocket closed:",
+//       event.code,
+//       event.reason
+//     );
+
+//     socketStatus.value = "Disconnected";
+
+//     socket = null;
+//   };
+
+
+//   socket.onerror = (error) => {
+//     console.error("WebSocket error:", error);
+
+//     socketStatus.value = "Error";
+//   };
+// }
+
 function connectWebSocket(token) {
-  if (socket) {
-    socket.close();
-    socket = null;
-  }
+    console.log("Starting WebSocket connection...");
+    console.log("Token exists:", !!token);
 
+    const wsUrl =
+        `ws://localhost:5000/core/driver/ws?token=${encodeURIComponent(token)}`;
 
-  socketStatus.value = "Connecting...";
+    console.log("WebSocket URL:", wsUrl);
 
+    socket = new WebSocket(wsUrl);
 
-  socket = new WebSocket(
-    `${WS_URL}?token=${encodeURIComponent(token)}`
-  );
-
-
-  socket.onopen = () => {
-    socketStatus.value = "Connected";
-  };
-
-
-  socket.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-
-      console.log("WebSocket message:", data);
-
-      if (data.type === "connection_established") {
+    socket.onopen = () => {
+        console.log("WEBSOCKET CONNECTED");
         socketStatus.value = "Connected";
-        message.value = "Driver WebSocket connected";
-      }
+    };
 
-      if (data.type === "pong") {
-        console.log("Pong received");
-      }
+    socket.onmessage = (event) => {
+        console.log("WEBSOCKET MESSAGE:", event.data);
 
-    } catch (error) {
-      console.error(
-        "Invalid WebSocket message:",
-        error
-      );
-    }
-  };
+        try {
+            const data = JSON.parse(event.data);
+            console.log("Parsed message:", data);
+        } catch (error) {
+            console.error("Message parse error:", error);
+        }
+    };
 
+    socket.onerror = (error) => {
+        console.error("WEBSOCKET ERROR:", error);
+        socketStatus.value = "Error";
+    };
 
-  socket.onclose = (event) => {
-    console.log(
-      "WebSocket closed:",
-      event.code,
-      event.reason
-    );
+    socket.onclose = (event) => {
+        console.log(
+            "WEBSOCKET CLOSED",
+            "code:",
+            event.code,
+            "reason:",
+            event.reason
+        );
 
-    socketStatus.value = "Disconnected";
-
-    socket = null;
-  };
-
-
-  socket.onerror = (error) => {
-    console.error("WebSocket error:", error);
-
-    socketStatus.value = "Error";
-  };
+        socketStatus.value = "Disconnected";
+    };
 }
 
 

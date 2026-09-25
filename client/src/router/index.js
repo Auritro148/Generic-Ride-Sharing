@@ -8,6 +8,7 @@ import RideRequest from "../views/RideRequest.vue";
 import rideSearching from '../views/RideSearching.vue';
 import rideAccepted from '../views/RideAccepted.vue';
 import driver from '../views/driver.vue';
+import driversign from '../views/driversign.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -39,9 +40,9 @@ const router = createRouter({
     },
 
     {
-      path: "/ride-request",
+      path: "/driversignin",
       name: "RideRequest",
-      component: Home,
+      component: driversign,
       meta: { requiresAuth: true }
     },
 
