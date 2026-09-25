@@ -1,3 +1,4 @@
+
 /*
  * rideRequestController.js
  *
@@ -8,6 +9,10 @@ const rideRequestModel = require("../models/rideRequestModel");
 
 const fareCalculator = require("../services/fareCalculator");
 
+const {
+    notifyDriversOfRideRequest
+} = require("../services/notifyDriversOfRideRequest");
+
 
 // ---------------------------------------------
 // Create ride request
@@ -16,7 +21,7 @@ const fareCalculator = require("../services/fareCalculator");
 // POST /ride-request
 //
 // Passenger identity comes from:
-// JWT → req.user.email → users → passengers
+// JWT → req.user.id → users → passengers
 //
 async function createRideRequest(req, res) {
 
@@ -101,7 +106,9 @@ async function createRideRequest(req, res) {
         // -----------------------------------------
 
         const vehicle =
-            await rideRequestModel.findVehicleType(vehicleType);
+            await rideRequestModel.findVehicleType(
+                vehicleType
+            );
 
 
         if (!vehicle) {
@@ -117,26 +124,26 @@ async function createRideRequest(req, res) {
         // Determine seats from vehicle capacity
         // -----------------------------------------
 
-        const seats = vehicle.capacity;
+        const seats =
+            vehicle.capacity;
 
 
         // -----------------------------------------
         // Calculate estimated fare
         // -----------------------------------------
-        //
-        // Client estimatedFare is deliberately ignored.
-        //
-        // The calculation logic lives in a separate
-        // service and can later be reused by a
-        // dedicated fare-calculation API endpoint.
-        //
 
         const estimatedFare =
             await fareCalculator.calculateFare({
+
                 distance,
-                vehicleType: vehicle.model_name,
+
+                vehicleType:
+                    vehicle.model_name,
+
                 coupon,
+
                 couponDiscount
+
             });
 
 
@@ -147,13 +154,16 @@ async function createRideRequest(req, res) {
         const result =
             await rideRequestModel.createRideRequest({
 
-                passenger_id: passenger.passenger_id,
+                passenger_id:
+                    passenger.passenger_id,
 
                 seats,
 
-                vehicle_type_id: vehicle.type_id,
+                vehicle_type_id:
+                    vehicle.type_id,
 
-                est_fare: estimatedFare,
+                est_fare:
+                    estimatedFare,
 
                 pickup,
 
@@ -163,21 +173,78 @@ async function createRideRequest(req, res) {
 
 
         // -----------------------------------------
-        // Response
+        // Get created request ID
+        // -----------------------------------------
+
+        const reqId =
+            result.request.req_id;
+
+
+        // -----------------------------------------
+        // Notify nearby eligible drivers
+        // -----------------------------------------
+
+        let notificationResult = null;
+
+
+        try {
+
+            notificationResult =
+                await notifyDriversOfRideRequest(
+                    reqId
+                );
+
+        } catch (error) {
+
+            /*
+             * Ride request creation has already
+             * succeeded.
+             *
+             * Notification failure should not
+             * undo the created ride request.
+             */
+
+            console.error(
+                `Failed to notify drivers for ride request ${reqId}:`,
+                error
+            );
+
+        }
+
+
+        // -----------------------------------------
+        // Send response
         // -----------------------------------------
 
         return res.status(201).json({
-            message: "Ride request created successfully",
-            rideId: result.request.req_id,
-            status: result.request.status,
-            request: result.request,
-            location: result.location
+
+            message:
+                "Ride request created successfully",
+
+            rideId:
+                reqId,
+
+            status:
+                result.request.status,
+
+            request:
+                result.request,
+
+            location:
+                result.location,
+
+            notification:
+                notificationResult
+
         });
 
 
     } catch (error) {
 
-        console.error("Ride request creation error:", error);
+        console.error(
+            "Ride request creation error:",
+            error
+        );
 
         return res.status(500).json({
             message: "Failed to create ride request"
@@ -190,3 +257,4 @@ async function createRideRequest(req, res) {
 module.exports = {
     createRideRequest
 };
+
