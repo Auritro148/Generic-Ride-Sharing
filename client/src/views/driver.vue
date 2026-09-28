@@ -1091,13 +1091,12 @@ function getPickupLocation() {
 
 
   return (
-    rideRequest.value.pickup_location ||
-    rideRequest.value.pickup_address ||
-    rideRequest.value.pickup ||
+    rideRequest.value.pickup?.name ||
+    rideRequest.value.pickup?.address ||
     (
-      rideRequest.value.pickup_lat &&
-      rideRequest.value.pickup_long
-        ? `${rideRequest.value.pickup_lat}, ${rideRequest.value.pickup_long}`
+      rideRequest.value.pickup?.latitude !== undefined &&
+      rideRequest.value.pickup?.longitude !== undefined
+        ? `${rideRequest.value.pickup.latitude}, ${rideRequest.value.pickup.longitude}`
         : "Pickup location"
     )
   );
@@ -1106,26 +1105,21 @@ function getPickupLocation() {
 
 
 function getDestinationLocation() {
-
   if (!rideRequest.value) {
     return "Destination";
   }
 
-
   return (
-    rideRequest.value.destination_location ||
-    rideRequest.value.destination_address ||
-    rideRequest.value.destination ||
+    rideRequest.value.dropoff?.name ||
+    rideRequest.value.dropoff?.address ||
     (
-      rideRequest.value.destination_lat &&
-      rideRequest.value.destination_long
-        ? `${rideRequest.value.destination_lat}, ${rideRequest.value.destination_long}`
+      rideRequest.value.dropoff?.latitude !== undefined &&
+      rideRequest.value.dropoff?.longitude !== undefined
+        ? `${rideRequest.value.dropoff.latitude}, ${rideRequest.value.dropoff.longitude}`
         : "Destination"
     )
   );
-
 }
-
 
 /* =========================================
    DISTANCE
