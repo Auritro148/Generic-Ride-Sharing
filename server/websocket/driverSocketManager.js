@@ -90,9 +90,14 @@ function removeDriverSocket(
 
 function getDriverSocket(driverId) {
 
-    return driverSockets.get(
+    let rtnval =  driverSockets.get(
         driverId
+      
     );
+    console.log("from getDriverSocket: ");
+    console.log(rtnval);
+
+    return rtnval;
 }
 
 

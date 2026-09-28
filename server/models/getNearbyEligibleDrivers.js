@@ -131,6 +131,10 @@ async function getNearbyEligibleDrivers(reqId) {
             DRIVER_SEARCH_RADIUS_METERS
         ]
     );
+    console.log("FROM GETNEARBYELIGIBLEDIVERS.JS: ", result.rows);
+    console.log(
+        `Found ${result.rowCount} eligible drivers for ride request ${reqId}`
+    );
 
 
     return result.rows;

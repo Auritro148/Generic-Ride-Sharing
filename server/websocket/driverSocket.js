@@ -114,6 +114,16 @@ function setupDriverWebSocket(wss) {
                 socket
             );
 
+            console.log(
+                "Registered driver ID:",
+                driverId
+            );
+
+            console.log(
+                "Registered socket:",
+                !!getDriverSocket(driverId)
+            );
+
 
             /*
              * --------------------------------
@@ -301,7 +311,7 @@ function setupDriverWebSocket(wss) {
             });
 
 
-     
+
 
             socket.send(
                 JSON.stringify({

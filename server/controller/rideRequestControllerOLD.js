@@ -1,3 +1,4 @@
+
 /*
  * rideRequestController.js
  *
@@ -193,12 +194,9 @@ async function createRideRequest(req, res) {
                     reqId
                 );
 
-
-            console.log(
-                "Ride request notification result:",
-                notificationResult
-            );
-
+                console.log("test run from rrc.js: ", notificationResult);
+                console.log(notificationResult
+                );
 
         } catch (error) {
 
@@ -238,10 +236,10 @@ async function createRideRequest(req, res) {
 
             location:
                 result.location,
+   
 
             notification:
                 notificationResult
-                
 
         });
 
@@ -264,3 +262,4 @@ async function createRideRequest(req, res) {
 module.exports = {
     createRideRequest
 };
+
