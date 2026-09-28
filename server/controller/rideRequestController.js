@@ -194,6 +194,10 @@ async function createRideRequest(req, res) {
                     reqId
                 );
 
+                console.log("test run from rrc.js: ", notificationResult);
+                console.log(notificationResult
+                );
+
         } catch (error) {
 
             /*

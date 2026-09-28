@@ -63,6 +63,10 @@ async function notifyDriversOfRideRequest(reqId) {
                 driver.driver_id
             );
 
+            console.log(
+              "socket open:" ,!!socket && socket.readyState === WebSocket.OPEN
+            );
+
 
         /*
          * A driver can satisfy the database
@@ -75,7 +79,11 @@ async function notifyDriversOfRideRequest(reqId) {
         if (
             !socket ||
             socket.readyState !== WebSocket.OPEN
+           
         ) {
+
+
+
 
             unavailableDrivers.push(
                 driver.driver_id
