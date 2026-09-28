@@ -14,15 +14,6 @@
  *     Who is eligible?
  *
  *
- * ride request data:
- *
- * getRideRequestNotificationData()
- *
- * determines:
- *
- *     What ride information should be sent?
- *
- *
  * WebSocket layer:
  *
  * driverSocketManager
@@ -40,44 +31,11 @@ const {
 } = require("../models/getNearbyEligibleDrivers");
 
 const {
-    getRideRequestNotificationData
-} = require("../models/rideRequestNotificationModel");
-
-const {
     getDriverSocket
 } = require("../websocket/driverSocketManager");
 
 
 async function notifyDriversOfRideRequest(reqId) {
-
-    // -----------------------------------------
-    // Get ride request information
-    // -----------------------------------------
-    //
-    // Gets:
-    //
-    // - pickup location
-    // - dropoff location
-    // - passenger full name
-    // - estimated fare
-    //
-    // using the specific ride request ID.
-    //
-
-    const rideRequest =
-        await getRideRequestNotificationData(
-            reqId
-        );
-
-
-    if (!rideRequest) {
-
-        throw new Error(
-            `Ride request ${reqId} not found`
-        );
-
-    }
-
 
     // -----------------------------------------
     // Find eligible nearby drivers
@@ -105,12 +63,9 @@ async function notifyDriversOfRideRequest(reqId) {
                 driver.driver_id
             );
 
-
-        console.log(
-            "socket open:",
-            !!socket &&
-            socket.readyState === WebSocket.OPEN
-        );
+            console.log(
+              "socket open:" ,!!socket && socket.readyState === WebSocket.OPEN
+            );
 
 
         /*
@@ -124,8 +79,11 @@ async function notifyDriversOfRideRequest(reqId) {
         if (
             !socket ||
             socket.readyState !== WebSocket.OPEN
-
+           
         ) {
+
+
+
 
             unavailableDrivers.push(
                 driver.driver_id
@@ -138,14 +96,6 @@ async function notifyDriversOfRideRequest(reqId) {
         // -----------------------------------------
         // Create WebSocket notification
         // -----------------------------------------
-        //
-        // distance_meters comes from the existing
-        // nearby-driver query.
-        //
-        // The ride-specific location, passenger
-        // name and fare come from the ride request
-        // query above.
-        //
 
         const notification = {
 
@@ -153,20 +103,7 @@ async function notifyDriversOfRideRequest(reqId) {
 
             data: {
 
-                req_id:
-                    reqId,
-
-                passenger_name:
-                    rideRequest.passenger_name,
-
-                est_fare:
-                    rideRequest.est_fare,
-
-                pickup:
-                    rideRequest.pickup,
-
-                dropoff:
-                    rideRequest.dropoff,
+                req_id: reqId,
 
                 distance_meters:
                     Number(
