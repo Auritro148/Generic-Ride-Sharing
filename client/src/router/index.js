@@ -43,7 +43,7 @@ const router = createRouter({
       path: "/driversignin",
       name: "RideRequest",
       component: driversign,
-      meta: { requiresAuth: true }
+     // meta: { requiresAuth: true }
     },
 
     {
