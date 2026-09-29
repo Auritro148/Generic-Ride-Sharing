@@ -1,38 +1,32 @@
 /*
  * driverRegistrationModel.js
  *
- * Database interface for driver registration requests.
+ * Handles all database operations related to
+ * driver registration requests.
  *
- * The existing `drivers` table is intentionally NOT used.
+ * The client does not provide user_id.
+ * The authenticated user's email is obtained
+ * from the JWT and used to find user_id.
  *
- * Registration flow:
- *
- * users
- *   ↓
- * driver_requests
- *   ├── pending
- *   ├── approved
- *   └── declined
- *
- * All database operations for driver registration
- * are implemented in this file.
+ * The existing `drivers` table is intentionally
+ * NOT used.
  */
-
 
 const pool = require("../config/dbConfig");
 
 
 // ---------------------------------------------
-// Find user by user ID
+// Find user by email
 // ---------------------------------------------
 //
-// Determines whether the supplied user_id belongs
-// to an existing registered user.
+// The email comes from:
+// req.user.id
 //
-// @param {string} userId
-// @returns {Object|null}
+// Returns the corresponding user information
+// including the internal user_id.
 //
-async function findUserById(userId) {
+
+async function findUserByEmail(email) {
 
     const query = `
         SELECT
@@ -41,41 +35,31 @@ async function findUserById(userId) {
             last_name,
             email,
             user_type
-        FROM public.users
-        WHERE user_id = $1
+        FROM users
+        WHERE email = $1
     `;
 
-    const result =
-        await pool.query(
-            query,
-            [userId]
-        );
-
+    const result = await pool.query(
+        query,
+        [email]
+    );
 
     if (result.rows.length === 0) {
-
         return null;
-
     }
-
 
     return result.rows[0];
 }
 
 
 // ---------------------------------------------
-// Find driver registration request by user ID
+// Find existing driver registration request
 // ---------------------------------------------
 //
-// Checks whether the user already has a
-// driver registration request.
+// Uses the internal user_id obtained from
+// the users table.
 //
-// driver_requests.user_id is UNIQUE, therefore
-// one user can have only one request.
-//
-// @param {string} userId
-// @returns {Object|null}
-//
+
 async function findDriverRequestByUserId(userId) {
 
     const query = `
@@ -85,24 +69,18 @@ async function findDriverRequestByUserId(userId) {
             user_id,
             doc_id,
             req_status
-        FROM public.driver_requests
+        FROM driver_requests
         WHERE user_id = $1
     `;
 
-
-    const result =
-        await pool.query(
-            query,
-            [userId]
-        );
-
+    const result = await pool.query(
+        query,
+        [userId]
+    );
 
     if (result.rows.length === 0) {
-
         return null;
-
     }
-
 
     return result.rows[0];
 }
@@ -112,24 +90,16 @@ async function findDriverRequestByUserId(userId) {
 // Create driver registration request
 // ---------------------------------------------
 //
-// Creates a new pending driver request.
+// req_status is not provided because the
+// database automatically sets it to 'pending'.
 //
-// req_status is intentionally not supplied because
-// the database default is:
+// doc_id is optional.
 //
-//     'pending'
-//
-// @param {string} userId
-// @param {number|null} docId
-// @returns {Object}
-//
-async function createDriverRequest(
-    userId,
-    docId = null
-) {
+
+async function createDriverRequest(userId, docId = null) {
 
     const query = `
-        INSERT INTO public.driver_requests (
+        INSERT INTO driver_requests (
             user_id,
             doc_id
         )
@@ -142,16 +112,10 @@ async function createDriverRequest(
             req_status
     `;
 
-
-    const result =
-        await pool.query(
-            query,
-            [
-                userId,
-                docId
-            ]
-        );
-
+    const result = await pool.query(
+        query,
+        [userId, docId]
+    );
 
     return result.rows[0];
 }
@@ -160,52 +124,36 @@ async function createDriverRequest(
 // ---------------------------------------------
 // Get driver registration status
 // ---------------------------------------------
-//
-// Returns the current registration request.
-//
-// @param {string} userId
-// @returns {Object|null}
-//
+
 async function getDriverRegistrationStatus(userId) {
 
     const query = `
         SELECT
             req_no,
-            created_at,
             user_id,
             doc_id,
-            req_status
-        FROM public.driver_requests
+            req_status,
+            created_at
+        FROM driver_requests
         WHERE user_id = $1
     `;
 
-
-    const result =
-        await pool.query(
-            query,
-            [userId]
-        );
-
+    const result = await pool.query(
+        query,
+        [userId]
+    );
 
     if (result.rows.length === 0) {
-
         return null;
-
     }
-
 
     return result.rows[0];
 }
 
 
 module.exports = {
-
-    findUserById,
-
+    findUserByEmail,
     findDriverRequestByUserId,
-
     createDriverRequest,
-
     getDriverRegistrationStatus
-
 };
