@@ -11,15 +11,12 @@ const auth = require("../middleware/auth");
 const rideRequest = require("../controller/rideRequestController");
 const fareCalculation = require("../controller/fareController");
 const updatePassengerLocationController = require("../controller/updatePassengerLocationController");
-const {
-    updatePassengerLocationController
-} =
-    require("../controllers/updatePassengerLocationController");
+
 
 const {
     passengerRideStatusController
 } =
-    require("../controllers/passengerRideStatusController");
+    require("../controller/passengerRideStatusController");
 
 
 

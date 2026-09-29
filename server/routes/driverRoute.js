@@ -62,7 +62,7 @@ router.post(
 
 const {
     confirmRideRequestController
-} = require("../controllers/confirmRideRequestController");
+} = require("../controller/confirmRideRequestController");
 
 router.post(
     "/confirm-request",
