@@ -9,6 +9,9 @@ import rideSearching from '../views/RideSearching.vue';
 import rideAccepted from '../views/RideAccepted.vue';
 import driver from '../views/driver.vue';
 import driversign from '../views/driversign.vue';
+import UpdatePassengerProfile from'../views/UpdateProfile.vue';
+import ChangePassword from '../views/ChangePassword.vue';
+import DriverRegistration from '../views/DriverRegistration.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -40,10 +43,9 @@ const router = createRouter({
     },
 
     {
-      path: "/driversignin",
+      path: "/drivers",
       name: "RideRequest",
       component: driversign,
-     // meta: { requiresAuth: true }
     },
 
     {
@@ -79,6 +81,26 @@ const router = createRouter({
       name: 'Profile',
       component: PassengerProfile,
       meta: {requiresAuth: true }
+    },
+
+    {
+      path: '/profile/update',
+      name: 'Update Profile',
+      component: UpdatePassengerProfile,
+      meta: {requiresAuth: true }
+    },
+
+    {
+      path: '/change-password',
+      name: 'Change password',
+      component: ChangePassword,
+      meta: {requiresAuth: true }
+    },
+
+    {
+      path: '/registerdriver',
+      name: 'Driver registration',
+      component: DriverRegistration,
     }
   ]
 })
