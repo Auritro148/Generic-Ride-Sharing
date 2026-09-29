@@ -3,10 +3,17 @@
  *
  * Handles driver registration requests.
  *
- * Driver registration is available only to users
- * who are already registered in the users table.
+ * The client does NOT provide user_id.
  *
- * The existing `drivers` table is intentionally NOT used.
+ * The authenticated user's email is obtained
+ * from req.user.id, because the JWT stores
+ * the email in the `id` field.
+ *
+ * Driver registration is available only to users
+ * already registered in the users table.
+ *
+ * The existing `drivers` table is intentionally
+ * NOT used.
  *
  * Registration is stored in driver_requests and
  * remains subject to future admin approval.
@@ -23,7 +30,7 @@ const driverRegistrationModel =
 //
 // Supported operations:
 //
-// 1. Check whether a user exists
+// 1. Check whether the authenticated user exists
 // 2. Check whether a driver request exists
 // 3. Create a driver registration request
 // 4. Check registration status
@@ -33,8 +40,14 @@ const driverRegistrationModel =
 // Expected body:
 //
 // {
+//     "action": "register"
+// }
+//
+// Optional:
+//
+// {
 //     "action": "register",
-//     "user_id": "uuid"
+//     "doc_id": 123
 // }
 //
 // Supported actions:
@@ -44,15 +57,45 @@ const driverRegistrationModel =
 // "register"
 // "status"
 //
+
 async function driverRegistrationController(req, res) {
 
     try {
 
         const {
             action,
-            user_id,
             doc_id
         } = req.body;
+
+
+        // -----------------------------------------
+        // Get email from authenticated JWT
+        // -----------------------------------------
+        //
+        // JWT payload:
+        //
+        // {
+        //     "id": "user@example.com"
+        // }
+        //
+        // Therefore:
+        //
+        // req.user.id = user's email
+        //
+
+        const email = req.user?.id;
+
+
+        if (!email) {
+
+            return res.status(401).json({
+
+                message:
+                    "User identity is missing from authentication token"
+
+            });
+
+        }
 
 
         // -----------------------------------------
@@ -70,7 +113,10 @@ async function driverRegistrationController(req, res) {
         if (!action) {
 
             return res.status(400).json({
-                message: "action is required"
+
+                message:
+                    "action is required"
+
             });
 
         }
@@ -79,23 +125,29 @@ async function driverRegistrationController(req, res) {
         if (!validActions.includes(action)) {
 
             return res.status(400).json({
-                message: "Invalid action"
+
+                message:
+                    "Invalid action"
+
             });
 
         }
 
 
         // -----------------------------------------
-        // Validate user ID
+        // Find authenticated user
         // -----------------------------------------
+        //
+        // The client does not provide user_id.
+        //
+        // Email comes from JWT and user_id is
+        // obtained from the users table.
+        //
 
-        if (!user_id) {
-
-            return res.status(400).json({
-                message: "user_id is required"
-            });
-
-        }
+        const user =
+            await driverRegistrationModel.findUserByEmail(
+                email
+            );
 
 
         // -----------------------------------------
@@ -104,17 +156,15 @@ async function driverRegistrationController(req, res) {
 
         if (action === "check_user") {
 
-            const user =
-                await driverRegistrationModel.findUserById(
-                    user_id
-                );
-
-
             if (!user) {
 
                 return res.status(404).json({
+
                     registered: false,
-                    message: "User is not registered"
+
+                    message:
+                        "User is not registered"
+
                 });
 
             }
@@ -138,30 +188,33 @@ async function driverRegistrationController(req, res) {
 
 
         // -----------------------------------------
+        // All remaining operations require an
+        // existing user.
+        // -----------------------------------------
+
+        if (!user) {
+
+            return res.status(404).json({
+
+                registered_user: false,
+
+                message:
+                    "User is not registered"
+
+            });
+
+        }
+
+
+        // -----------------------------------------
         // Check existing driver request
         // -----------------------------------------
 
         if (action === "check_driver") {
 
-            const user =
-                await driverRegistrationModel.findUserById(
-                    user_id
-                );
-
-
-            if (!user) {
-
-                return res.status(404).json({
-                    registered_user: false,
-                    message: "User is not registered"
-                });
-
-            }
-
-
             const driverRequest =
                 await driverRegistrationModel.findDriverRequestByUserId(
-                    user_id
+                    user.user_id
                 );
 
 
@@ -170,6 +223,7 @@ async function driverRegistrationController(req, res) {
                 return res.status(200).json({
 
                     registered_user: true,
+
                     driver_registered: false,
 
                     message:
@@ -183,6 +237,7 @@ async function driverRegistrationController(req, res) {
             return res.status(200).json({
 
                 registered_user: true,
+
                 driver_registered: true,
 
                 request: driverRequest
@@ -199,34 +254,12 @@ async function driverRegistrationController(req, res) {
         if (action === "register") {
 
             // -------------------------------------
-            // User must already exist
-            // -------------------------------------
-
-            const user =
-                await driverRegistrationModel.findUserById(
-                    user_id
-                );
-
-
-            if (!user) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Only registered users can apply for driver registration"
-
-                });
-
-            }
-
-
-            // -------------------------------------
             // Check existing request
             // -------------------------------------
 
             const existingRequest =
                 await driverRegistrationModel.findDriverRequestByUserId(
-                    user_id
+                    user.user_id
                 );
 
 
@@ -248,10 +281,17 @@ async function driverRegistrationController(req, res) {
             // -------------------------------------
             // Create pending request
             // -------------------------------------
+            //
+            // doc_id is optional because documents
+            // are uploaded through another API.
+            //
+            // If no doc_id is provided, NULL is
+            // stored in driver_requests.doc_id.
+            //
 
             const driverRequest =
                 await driverRegistrationModel.createDriverRequest(
-                    user_id,
+                    user.user_id,
                     doc_id ?? null
                 );
 
@@ -277,7 +317,7 @@ async function driverRegistrationController(req, res) {
 
             const driverRequest =
                 await driverRegistrationModel.getDriverRegistrationStatus(
-                    user_id
+                    user.user_id
                 );
 
 
@@ -323,13 +363,14 @@ async function driverRegistrationController(req, res) {
 
 
         // -----------------------------------------
-        // Handle duplicate user request
+        // Handle duplicate driver request
         // -----------------------------------------
         //
         // driver_requests.user_id has a UNIQUE
-        // constraint. This protects the database
-        // even if two registration requests arrive
-        // simultaneously.
+        // constraint.
+        //
+        // This also protects against two requests
+        // arriving simultaneously.
         //
 
         if (error.code === "23505") {
@@ -345,7 +386,7 @@ async function driverRegistrationController(req, res) {
 
 
         // -----------------------------------------
-        // Handle invalid foreign key
+        // Handle foreign-key violation
         // -----------------------------------------
 
         if (error.code === "23503") {
@@ -353,7 +394,7 @@ async function driverRegistrationController(req, res) {
             return res.status(400).json({
 
                 message:
-                    "Invalid user ID"
+                    "Invalid user"
 
             });
 
