@@ -492,26 +492,19 @@
             <!-- Verify -->
 
             <button
-              type="submit"
-              class="signup-btn"
-              :disabled="otpLoading"
-            >
+  type="submit"
+  class="signup-btn"
+  :disabled="otpLoading"
+>
+  <span>
+    {{ otpLoading ? 'Verifying...' : 'Verify Email' }}
+  </span>
 
-              <span>
+  <span class="arrow-circle">
+    →
+  </span>
+</button>
 
-                {{
-                  loading
-                    ? 'Verifying...'
-                    : 'Verify Email'
-                }}
-
-              </span>
-
-              <span class="arrow-circle">
-                →
-              </span>
-              {{ otpLoading ? "Verifying..." : "Verify" }}
-            </button>
 
           </form>
 
@@ -1097,86 +1090,138 @@ const handleRegistration =
 // 
 
 const verifyOTP = async () => {
-    const otpCode = otp.value.trim();
 
-    // Validate OTP
-    if (!/^\d{6}$/.test(otpCode)) {
-        otpError.value = "Please enter a valid 6-digit verification code.";
-        return;
+  const otpCode = otp.value.trim()
+
+  // Validate OTP
+  if (!/^\d{6}$/.test(otpCode)) {
+    errorMessage.value =
+      'Please enter a valid 6-digit verification code.'
+    return
+  }
+
+  otpLoading.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+
+    const email = form.email.trim().toLowerCase()
+
+    if (!email) {
+      errorMessage.value =
+        'Email information is missing.'
+      return
     }
 
-    otpLoading.value = true;
-    otpError.value = "";
-    otpSuccess.value = "";
+    const response = await fetch(
+      `${API_URL}/core/user/verify-otp`,
+      {
+        method: 'POST',
 
-    try {
-        const response = await fetch(`${API_URL}/core/user/verify-otp`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: registrationEmail.value,
-                otp: otpCode
-            })
-        });
+        headers: {
+          'Content-Type': 'application/json'
+        },
 
-        const data = await response.json();
+        body: JSON.stringify({
+          email: email,
+          otp: otpCode
+        })
+      }
+    )
 
-        if (!response.ok) {
-            switch (data.message) {
-                case "Invalid OTP":
-                    otpError.value = "Invalid verification code.";
-                    break;
+    const data = await response.json()
 
-                case "OTP has expired":
-                    otpError.value = "This verification code has expired.";
-                    break;
+    console.log('OTP verification response:', data)
 
-                case "OTP has already been used":
-                    otpError.value = "This verification code has already been used.";
-                    break;
+    // Backend returned an error
+    if (!response.ok) {
 
-                case "OTP not found":
-                    otpError.value =
-                        "Verification code not found. Please register again.";
-                    break;
+      switch (data.message) {
 
-                default:
-                    otpError.value =
-                        data.message || "OTP verification failed.";
-            }
+        case 'Invalid OTP':
+          errorMessage.value =
+            'Invalid verification code.'
+          break
 
-            return;
-        }
+        case 'OTP has expired':
+          errorMessage.value =
+            'This verification code has expired.'
+          break
 
-        if (data.verificationStatus === "success") {
+        case 'OTP has already been used':
+          errorMessage.value =
+            'This verification code has already been used.'
+          break
 
-            otpSuccess.value = "Email verified successfully!";
+        case 'OTP not found':
+          errorMessage.value =
+            'Verification code not found. Please register again.'
+          break
 
-            // Registration is complete
-            localStorage.removeItem("registrationEmail");
-            localStorage.removeItem("registrationFirstName");
-            localStorage.removeItem("registrationLastName");
-            localStorage.removeItem("registrationPhone");
+        default:
+          errorMessage.value =
+            data.message ||
+            'OTP verification failed.'
+      }
 
-            // Small delay so user can see success message
-            setTimeout(() => {
-                router.push("/signin");
-            }, 1000);
-        }
-
-    } catch (error) {
-
-        console.error("OTP verification error:", error);
-
-        otpError.value =
-            "Unable to verify the code. Please try again.";
-
-    } finally {
-        otpLoading.value = false;
+      return
     }
-};
+
+    // OTP verified successfully
+    if (
+      data.verificationStatus === 'success'
+    ) {
+
+      successMessage.value =
+        'Email verified successfully! Redirecting to sign in...'
+
+      // Clear registration data
+      localStorage.removeItem(
+        'registration_first_name'
+      )
+
+      localStorage.removeItem(
+        'registration_last_name'
+      )
+
+      localStorage.removeItem(
+        'registration_phone'
+      )
+
+      localStorage.removeItem(
+        'registration_email'
+      )
+
+      // Redirect to Sign In
+      setTimeout(() => {
+        router.push('/signin')
+      }, 1000)
+
+    } else {
+
+      errorMessage.value =
+        data.message ||
+        'OTP verification failed.'
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      'OTP verification error:',
+      error
+    )
+
+    errorMessage.value =
+      'Unable to verify the code. Please try again.'
+
+  } finally {
+
+    otpLoading.value = false
+
+  }
+}
 
 // 
 // RESEND OTP
