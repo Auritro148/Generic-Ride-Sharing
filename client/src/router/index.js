@@ -4,7 +4,7 @@ import AuthCard from '../components/AuthCard.vue'
 import SignIn from '../views/SignIn.vue'
 import SignUp from '../views/SignUp.vue'
 import Home from '../views/Home.vue'
-import RideRequest from "../views/RideRequest.vue";
+import PassengerProfile from "../views/passengerprofile.vue";
 import rideSearching from '../views/RideSearching.vue';
 import rideAccepted from '../views/RideAccepted.vue';
 import driver from '../views/driver.vue';
@@ -70,7 +70,15 @@ const router = createRouter({
     {
       path: '/driver',
       name: 'driverview',
-      component: driver
+      component: driver,
+      meta: {requiresAuth: true }
+    },
+
+    {
+      path: '/profile',
+      name: 'Profile',
+      component: PassengerProfile,
+      meta: {requiresAuth: true }
     }
   ]
 })

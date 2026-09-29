@@ -15,7 +15,7 @@ const setDriverStatus = require("../controller/setStatusController");
 
 const {
     driverRegistrationController
-} = require("../controllers/driverRegistrationController");
+} = require("../controller/driverRegistrationController");
 
 
 
