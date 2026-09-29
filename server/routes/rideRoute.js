@@ -11,6 +11,15 @@ const auth = require("../middleware/auth");
 const rideRequest = require("../controller/rideRequestController");
 const fareCalculation = require("../controller/fareController");
 const updatePassengerLocationController = require("../controller/updatePassengerLocationController");
+const {
+    updatePassengerLocationController
+} =
+    require("../controllers/updatePassengerLocationController");
+
+const {
+    passengerRideStatusController
+} =
+    require("../controllers/passengerRideStatusController");
 
 
 
@@ -20,6 +29,10 @@ router.post("/request", auth.varifyToken, rideRequest.createRideRequest);
 router.post("/fare", auth.varifyToken, fareCalculation.fareCalculation);
 router.post("/updatePassengerLocation", auth.varifyToken, updatePassengerLocationController.updatePassengerLocationController);
 
-
+router.get(
+    "/ride-status",
+    auth.varifyToken,
+    passengerRideStatusController
+);
 
 module.exports = router;

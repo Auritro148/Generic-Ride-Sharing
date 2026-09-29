@@ -60,5 +60,16 @@ router.post(
 );
 
 
+const {
+    confirmRideRequestController
+} = require("../controllers/confirmRideRequestController");
+
+router.post(
+    "/confirm-request",
+    auth.varifyToken,
+    confirmRideRequestController
+);
+
+
 module.exports = router;
 
