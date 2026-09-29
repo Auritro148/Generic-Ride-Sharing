@@ -12,10 +12,6 @@ const {
 } = require("../models/setDriverStatus");
 
 const {
-    updateDriverLocation
-} = require("../models/updateDriverLocation");
-
-const {
     addDriverId
 } = require("../middleware/driverIdentity");
 
@@ -41,42 +37,6 @@ function verifyDriverToken(token) {
     );
 
     return decoded;
-}
-
-
-/*
- * Validates latitude.
- *
- * Latitude must be between:
- *
- * -90 and +90
- */
-function isValidLatitude(lat) {
-
-    return (
-        typeof lat === "number" &&
-        Number.isFinite(lat) &&
-        lat >= -90 &&
-        lat <= 90
-    );
-}
-
-
-/*
- * Validates longitude.
- *
- * Longitude must be between:
- *
- * -180 and +180
- */
-function isValidLongitude(long) {
-
-    return (
-        typeof long === "number" &&
-        Number.isFinite(long) &&
-        long >= -180 &&
-        long <= 180
-    );
 }
 
 
@@ -186,7 +146,7 @@ function setupDriverWebSocket(wss) {
              * --------------------------------
              */
 
-            socket.on("message", async (message) => {
+            socket.on("message", (message) => {
 
                 try {
 
@@ -197,9 +157,8 @@ function setupDriverWebSocket(wss) {
 
 
                     /*
-                     * --------------------------------
-                     * Application-level ping
-                     * --------------------------------
+                     * Optional application-level
+                     * ping/pong.
                      */
 
                     if (data.type === "ping") {
@@ -210,111 +169,7 @@ function setupDriverWebSocket(wss) {
                             })
                         );
 
-                        return;
-
                     }
-
-
-                    /*
-                     * --------------------------------
-                     * Driver location update
-                     * --------------------------------
-                     *
-                     * Expected message:
-                     *
-                     * {
-                     *     "type": "location_update",
-                     *     "lat": 23.8103,
-                     *     "long": 90.4125
-                     * }
-                     */
-
-                    if (data.type === "location_update") {
-
-                        const lat =
-                            Number(data.lat);
-
-                        const long =
-                            Number(data.long);
-
-
-                        /*
-                         * Validate coordinates
-                         */
-
-                        if (
-                            !isValidLatitude(lat) ||
-                            !isValidLongitude(long)
-                        ) {
-
-                            socket.send(
-                                JSON.stringify({
-                                    type: "location_update_error",
-                                    message:
-                                        "Invalid latitude or longitude"
-                                })
-                            );
-
-                            return;
-
-                        }
-
-
-                        /*
-                         * Update latest driver
-                         * location in database.
-                         */
-
-                        const location =
-                            await updateDriverLocation(
-                                driverId,
-                                lat,
-                                long
-                            );
-
-
-                        /*
-                         * Send confirmation to
-                         * the driver client.
-                         */
-
-                        socket.send(
-                            JSON.stringify({
-                                type: "location_updated",
-                                data: {
-                                    driver_id:
-                                        location.driver_id,
-
-                                    lat:
-                                        Number(location.lat),
-
-                                    long:
-                                        Number(location.long),
-
-                                    updated_at:
-                                        location.updated_at
-                                }
-                            })
-                        );
-
-
-                        return;
-
-                    }
-
-
-                    /*
-                     * Unknown message type
-                     */
-
-                    socket.send(
-                        JSON.stringify({
-                            type: "error",
-                            message:
-                                "Unknown WebSocket message type"
-                        })
-                    );
-
 
                 } catch (error) {
 
@@ -322,32 +177,6 @@ function setupDriverWebSocket(wss) {
                         `Invalid WebSocket message from driver ${driverId}:`,
                         error
                     );
-
-
-                    /*
-                     * Do not close the driver's
-                     * WebSocket because of one
-                     * malformed message.
-                     */
-
-                    try {
-
-                        socket.send(
-                            JSON.stringify({
-                                type: "error",
-                                message:
-                                    "Invalid WebSocket message"
-                            })
-                        );
-
-                    } catch (sendError) {
-
-                        console.error(
-                            "Failed to send WebSocket error:",
-                            sendError
-                        );
-
-                    }
 
                 }
 
@@ -472,12 +301,6 @@ function setupDriverWebSocket(wss) {
             });
 
 
-            /*
-             * --------------------------------
-             * 9. Handle WebSocket errors
-             * --------------------------------
-             */
-
             socket.on("error", (error) => {
 
                 console.error(
@@ -488,19 +311,13 @@ function setupDriverWebSocket(wss) {
             });
 
 
-            /*
-             * --------------------------------
-             * 10. Connection confirmation
-             * --------------------------------
-             */
+
 
             socket.send(
                 JSON.stringify({
                     type: "connection_established",
-                    message:
-                        "Driver WebSocket connected",
-                    driver_id:
-                        driverId
+                    message: "Driver WebSocket connected",
+                    driver_id: driverId
                 })
             );
 
